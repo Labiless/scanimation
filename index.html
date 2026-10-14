@@ -29,18 +29,18 @@ header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
 h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
 header p { margin: 0; font-size: 12px; }
 
-/* control deck */
-.top { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px; }
-.right { display: grid; grid-template-rows: auto 1fr; gap: 8px; min-width: 0; }
-.looks { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.mid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-@media (max-width: 1100px) {
-  .top { grid-template-columns: minmax(0, 1fr); }
-  .mid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* editor: controls on the left, preview on the right */
+.editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 8px; align-items: start; }
+.controls-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.pair.inner { gap: 8px 16px; }
+.stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.editor > .stage-panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); max-height: calc(100vh - 16px); overflow-y: auto; }
+@media (max-width: 1000px) {
+  .editor { grid-template-columns: minmax(0, 1fr); }
+  .editor > .stage-panel { order: -1; top: env(safe-area-inset-top, 0px); max-height: 60vh; z-index: 2; background: var(--bg); }
 }
-@media (max-width: 640px) {
-  .mid, .looks { grid-template-columns: minmax(0, 1fr); }
-}
+@media (max-width: 560px) { .pair { grid-template-columns: minmax(0, 1fr); } }
 
 .panel { border: 1px solid var(--ink); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
@@ -121,7 +121,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   padding: 10px; touch-action: none;
 }
 .stage canvas { display: block; background: #fff; outline: 1px solid var(--ink); cursor: ew-resize; }
-.stage.fit canvas { max-width: 100%; max-height: max(300px, calc(100vh - 600px)); width: auto; height: auto; }
+.stage.fit canvas { max-width: 100%; max-height: max(260px, calc(100vh - 170px)); width: auto; height: auto; }
+@media (max-width: 1000px) { .stage.fit canvas { max-height: 34vh; } }
 .stage.horiz canvas { cursor: ns-resize; }
 .stage.radial canvas { cursor: grab; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
@@ -174,8 +175,9 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     <p>Drag the grid on the preview to move it by hand.</p>
   </header>
 
-  <!-- Row 1: sources (left) · export and look (right) -->
-  <div class="top">
+  <!-- Editor: controls stacked on the left, live preview on the right -->
+  <div class="editor">
+    <div class="controls-col">
     <section class="panel" aria-label="Frames">
       <div class="row between">
         <div class="seg" role="group" aria-label="Frame source">
@@ -259,66 +261,30 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 
       <ul class="frames" id="frameList" aria-label="Frames in order"></ul>
     </section>
-
-    <div class="right">
-      <section class="panel actions" aria-label="Export and save">
-        <div class="row">
-          <button id="saveGrid" type="button" class="primary">Download grid (transparent PNG)</button>
-          <button id="saveBase" type="button" class="primary">Download base image (PNG)</button>
+    <section class="panel" aria-labelledby="h-grid">
+      <h2 id="h-grid">Grid</h2>
+      <div class="pair inner">
+        <div class="stack">
+      <div class="row">
+        <span class="lbl">Motion</span>
+        <div class="seg" role="group" aria-label="Grid motion">
+          <button type="button" id="oriV" aria-pressed="true">Vertical</button>
+          <button type="button" id="oriH" aria-pressed="false">Horizontal</button>
+          <button type="button" id="oriR" aria-pressed="false">Circular</button>
         </div>
-        <label class="lbl"><input id="infoBand" type="checkbox" checked>Add a line with the settings above the image</label>
-        <div class="row">
-          <input id="animName" type="text" placeholder="Name (optional)" aria-label="Animation name" style="flex:1 1 140px; width:auto">
-          <button id="saveAnim" type="button" class="primary">Save for printing</button>
-          <button id="saveAsNew" type="button" hidden>Save as new</button>
-        </div>
-        <div class="row" id="editNote" hidden>
-          <span class="note">Editing <b id="editName"></b>: "Update" overwrites the saved one.</span>
-          <button id="stopEdit" type="button">Stop editing</button>
-        </div>
-        <p class="note" id="saveMsg" role="status"></p>
-        <div class="exports" id="exports" hidden></div>
-      </section>
-
-      <div class="looks">
-        <section class="panel" aria-label="Colour">
-          <div class="row">
-            <span class="lbl">Colour</span>
-            <div class="seg" role="group" aria-label="Colour">
-              <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
-              <button type="button" id="modePost" aria-pressed="false">Posterize</button>
-              <button type="button" id="modeOrig" aria-pressed="false">Original</button>
-            </div>
-          </div>
-          <div class="field" id="threshField">
-            <label for="thresh">Silhouette threshold: <b id="threshVal">140</b></label>
-            <input id="thresh" type="range" min="10" max="245" value="140">
-          </div>
-          <div class="field" id="postField" hidden>
-            <label for="levels">Levels per channel: <b id="levelsVal">3</b></label>
-            <input id="levels" type="range" min="2" max="8" value="3">
-            <label class="lbl"><input id="gray" type="checkbox" checked>Greyscale</label>
-          </div>
-          <label class="lbl"><input id="invert" type="checkbox">Invert black and white</label>
-        </section>
-
-        <section class="panel" aria-label="Fill and blur">
-          <div class="row" id="fillField">
-            <input id="fill" type="color" value="#000000" aria-label="Fill colour">
-            <label class="lbl" for="fill">Fill colour <b id="fillVal">#000000</b></label>
-          </div>
-          <div class="field">
-            <label for="blur">Edge blur: <b id="blurVal">0 px</b></label>
-            <input id="blur" type="range" min="0" max="12" step="0.5" value="0">
-          </div>
-        </section>
       </div>
-    </div>
-  </div>
-
-  <!-- Row 2: animation timing · format · size · grid -->
-  <div class="mid">
-    <section class="panel" aria-label="Loop and aperture">
+      <div class="field" id="slitField">
+        <label for="slit">Strip width: <b id="slitVal">4 px</b></label>
+        <input id="slit" type="range" min="1" max="24" value="4">
+      </div>
+      <div class="field" id="raysField" hidden>
+        <label for="rays">Number of rays: <b id="raysVal">48</b></label>
+        <input id="rays" type="range" min="6" max="240" value="48">
+      </div>
+      <p class="note" id="radialNote" hidden>Slits narrow towards the centre: keep subjects towards the outside.</p>
+    
+        </div>
+        <div class="stack">
       <div class="row">
         <span class="lbl">Loop</span>
         <div class="seg" role="group" aria-label="Animation loop">
@@ -330,8 +296,11 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         <label for="aperture">Slit aperture: <b id="apertureVal">100%</b></label>
         <input id="aperture" type="range" min="25" max="200" step="5" value="100">
       </div>
+    
+        </div>
+      </div>
     </section>
-
+    <div class="pair">
     <section class="panel" aria-labelledby="h-size">
       <h2 id="h-size">Print format</h2>
       <div class="cols2">
@@ -362,7 +331,6 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       </div>
       <p class="note">PNGs carry the dpi: printed at 100% they come out at the size shown.</p>
     </section>
-
     <section class="panel" aria-label="Size">
       <div class="cols2">
         <div class="field"><label for="wPx">Width (px)</label><input id="wPx" type="number" min="100" max="5000" value="800"></div>
@@ -375,30 +343,59 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         <input id="figScale" type="range" min="10" max="100" step="5" value="100">
       </div>
     </section>
-
-    <section class="panel" aria-labelledby="h-grid">
-      <h2 id="h-grid">Grid</h2>
-      <div class="row">
-        <span class="lbl">Motion</span>
-        <div class="seg" role="group" aria-label="Grid motion">
-          <button type="button" id="oriV" aria-pressed="true">Vertical</button>
-          <button type="button" id="oriH" aria-pressed="false">Horizontal</button>
-          <button type="button" id="oriR" aria-pressed="false">Circular</button>
+    </div>
+    <div class="pair">
+    <section class="panel" aria-label="Colour">
+          <div class="row">
+            <span class="lbl">Colour</span>
+            <div class="seg" role="group" aria-label="Colour">
+              <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
+              <button type="button" id="modePost" aria-pressed="false">Posterize</button>
+              <button type="button" id="modeOrig" aria-pressed="false">Original</button>
+            </div>
+          </div>
+          <div class="field" id="threshField">
+            <label for="thresh">Silhouette threshold: <b id="threshVal">140</b></label>
+            <input id="thresh" type="range" min="10" max="245" value="140">
+          </div>
+          <div class="field" id="postField" hidden>
+            <label for="levels">Levels per channel: <b id="levelsVal">3</b></label>
+            <input id="levels" type="range" min="2" max="8" value="3">
+            <label class="lbl"><input id="gray" type="checkbox" checked>Greyscale</label>
+          </div>
+          <label class="lbl"><input id="invert" type="checkbox">Invert black and white</label>
+        </section>
+    <section class="panel" aria-label="Fill and blur">
+          <div class="row" id="fillField">
+            <input id="fill" type="color" value="#000000" aria-label="Fill colour">
+            <label class="lbl" for="fill">Fill colour <b id="fillVal">#000000</b></label>
+          </div>
+          <div class="field">
+            <label for="blur">Edge blur: <b id="blurVal">0 px</b></label>
+            <input id="blur" type="range" min="0" max="12" step="0.5" value="0">
+          </div>
+        </section>
+    </div>
+    <section class="panel actions" aria-label="Export and save">
+        <div class="row">
+          <button id="saveGrid" type="button" class="primary">Download grid (transparent PNG)</button>
+          <button id="saveBase" type="button" class="primary">Download base image (PNG)</button>
         </div>
-      </div>
-      <div class="field" id="slitField">
-        <label for="slit">Strip width: <b id="slitVal">4 px</b></label>
-        <input id="slit" type="range" min="1" max="24" value="4">
-      </div>
-      <div class="field" id="raysField" hidden>
-        <label for="rays">Number of rays: <b id="raysVal">48</b></label>
-        <input id="rays" type="range" min="6" max="240" value="48">
-      </div>
-      <p class="note" id="radialNote" hidden>Slits narrow towards the centre: keep subjects towards the outside.</p>
-    </section>
-  </div>
+        <label class="lbl"><input id="infoBand" type="checkbox" checked>Add a line with the settings above the image</label>
+        <div class="row">
+          <input id="animName" type="text" placeholder="Name (optional)" aria-label="Animation name" style="flex:1 1 140px; width:auto">
+          <button id="saveAnim" type="button" class="primary">Save for printing</button>
+          <button id="saveAsNew" type="button" hidden>Save as new</button>
+        </div>
+        <div class="row" id="editNote" hidden>
+          <span class="note">Editing <b id="editName"></b>: "Update" overwrites the saved one.</span>
+          <button id="stopEdit" type="button">Stop editing</button>
+        </div>
+        <p class="note" id="saveMsg" role="status"></p>
+        <div class="exports" id="exports" hidden></div>
+      </section>
+    </div>
 
-  <!-- Row 3: live preview -->
   <section class="panel stage-panel" aria-label="Preview">
     <div class="stage fit" id="stage"><canvas id="view" aria-label="Animation preview"></canvas></div>
     <div class="toolbar">
@@ -421,6 +418,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     <div class="readout" id="readout"></div>
     <dl class="spec" id="spec" aria-label="Measurements"></dl>
   </section>
+  </div>
 
   <details class="panel print-box" id="printBox" open>
     <summary class="print-head">
