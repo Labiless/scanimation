@@ -34,6 +34,7 @@ header p { margin: 0; font-size: 12px; }
 .controls-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .pair.inner { gap: 8px 16px; }
+.icon-btn { padding: 3px; line-height: 0; }
 .stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .editor > .stage-panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); max-height: calc(100vh - 16px); overflow-y: auto; }
 @media (max-width: 1000px) {
@@ -262,7 +263,12 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       <ul class="frames" id="frameList" aria-label="Frames in order"></ul>
     </section>
     <section class="panel" aria-labelledby="h-grid">
-      <h2 id="h-grid">Grid</h2>
+      <div class="row between">
+        <h2 id="h-grid">Grid</h2>
+        <button type="button" id="gridReset" class="icon-btn" title="Reset grid to defaults" aria-label="Reset grid settings to defaults">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 1.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+      </div>
       <div class="pair inner">
         <div class="stack">
       <div class="row">
@@ -274,8 +280,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         </div>
       </div>
       <div class="field" id="slitField">
-        <label for="slit">Strip width: <b id="slitVal">4 px</b></label>
-        <input id="slit" type="range" min="1" max="24" value="4">
+        <label for="slit">Strip width: <b id="slitVal">2 px</b></label>
+        <input id="slit" type="range" min="1" max="24" value="2">
       </div>
       <div class="field" id="raysField" hidden>
         <label for="rays">Number of rays: <b id="raysVal">48</b></label>
@@ -293,8 +299,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         </div>
       </div>
       <div class="field" title="Below 100% the image is sharper but darker; above 100% it is brighter but neighbouring frames blend.">
-        <label for="aperture">Slit aperture: <b id="apertureVal">100%</b></label>
-        <input id="aperture" type="range" min="25" max="200" step="5" value="100">
+        <label for="aperture">Slit aperture: <b id="apertureVal">75%</b></label>
+        <input id="aperture" type="range" min="25" max="200" step="5" value="75">
       </div>
     
         </div>
@@ -460,7 +466,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 
   const S = {
     frames: [], source: 'img',
-    w: 4, vertical: true, radial: false, rays: 48, aperture: 1, loop: true,
+    w: 2, vertical: true, radial: false, rays: 48, aperture: 0.75, loop: true,
     outW: 800, outH: 800, dpi: 300, lockMm: false, ratio: 1, figScale: 1,
     mode: 'sil', thresh: 140, invert: false, fill: '#000000', blur: 0, levels: 3, gray: true,
     gif: null, gifN: 6, gifStart: 1, gifEnd: 1,
@@ -1045,6 +1051,15 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     $('apertureVal').textContent = `${pct}% ≈ ${pxToMm(px).toFixed(2)} mm${S.radial ? ' at edge' : ''}`;
   }
   $('aperture').oninput = e => { S.aperture = +e.target.value / 100; syncAperture(); later(); };
+  // grid defaults: vertical lines, 2 px strips, 48 rays, 75% aperture, continuous loop
+  $('gridReset').onclick = () => {
+    S.w = 2; S.rays = 48; S.aperture = 0.75; S.loop = true;
+    $('slit').value = S.w; syncSlit();
+    $('rays').value = S.rays; $('raysVal').textContent = S.rays;
+    $('aperture').value = 75;
+    seg($('loopOn'), $('loopOff'));
+    setMotion('v');
+  };
   $('rays').oninput = e => { S.rays = +e.target.value; $('raysVal').textContent = S.rays; later(); };
   const clampSize = v => Math.max(100, Math.min(5000, Math.round(+v || 0)));
   const mmToPx = v => (+v || 0) / 25.4 * S.dpi;
