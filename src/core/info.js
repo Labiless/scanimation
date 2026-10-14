@@ -2,7 +2,7 @@
  * The settings line printed above each piece, so a printed sheet can be matched to its
  * configuration later: size, strip and slit in mm, and the frame count.
  */
-import { state, pxToMm, wedgeAngle, frameCount } from '../state.js';
+import { settings, pxToMm, wedgeAngle, frameCount } from '../stores/state.svelte.js';
 import { createCanvas } from '../lib/canvas.js';
 
 export const INFO_SEPARATOR = '   ·   ';
@@ -10,13 +10,13 @@ export const INFO_SEPARATOR = '   ·   ';
 /** @returns {string[]} */
 export function infoSegments() {
   const mm = (px) => pxToMm(px).toFixed(2);
-  const segments = [`Size ${pxToMm(state.outW).toFixed(1)} × ${pxToMm(state.outH).toFixed(1)} mm`];
-  if (state.radial) {
+  const segments = [`Size ${pxToMm(settings.outW).toFixed(1)} × ${pxToMm(settings.outH).toFixed(1)} mm`];
+  if (settings.radial) {
     // wedges widen outwards, so quote them at the edge of the circle
-    const strip = (Math.min(state.outW, state.outH) / 2) * wedgeAngle();
-    segments.push(`Strip ${mm(strip)} mm at edge`, `Aperture ${mm(strip * state.aperture)} mm at edge`);
+    const strip = (Math.min(settings.outW, settings.outH) / 2) * wedgeAngle();
+    segments.push(`Strip ${mm(strip)} mm at edge`, `Aperture ${mm(strip * settings.aperture)} mm at edge`);
   } else {
-    segments.push(`Strip ${mm(state.w)} mm`, `Aperture ${mm(state.w * state.aperture)} mm`);
+    segments.push(`Strip ${mm(settings.w)} mm`, `Aperture ${mm(settings.w * settings.aperture)} mm`);
   }
   segments.push(`${frameCount()}F`);
   return segments;
@@ -31,7 +31,7 @@ export function infoSegments() {
  */
 export function withInfoBand(canvas, transparent) {
   const W = canvas.width;
-  const fs = Math.max(10, Math.round((1.8 / 25.4) * state.dpi));
+  const fs = Math.max(10, Math.round((1.8 / 25.4) * settings.dpi));
   const pad = Math.round(fs * 0.7);
   const lh = Math.round(fs * 1.35);
   const font = `500 ${fs}px Roboto, Arial, sans-serif`;

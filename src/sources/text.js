@@ -4,22 +4,22 @@
  */
 import { createCanvas } from '../lib/canvas.js';
 
-/** Typefaces offered in the Text tab, in the order of its <select>. */
+/** Typefaces offered in the Text tab. */
 export const FONTS = [
-  { css: '"Anton", Impact, sans-serif', weight: 400 },
-  { css: '"Archivo Black", "Arial Black", sans-serif', weight: 400 },
-  { css: '"Bebas Neue", Impact, sans-serif', weight: 400 },
-  { css: '"Rubik Mono One", "Arial Black", sans-serif', weight: 400 },
-  { css: '"Bricolage Grotesque", "Arial Black", sans-serif', weight: 800 },
-  { css: '"Arial Black", Arial, sans-serif', weight: 900 },
+  { label: 'Anton', css: '"Anton", Impact, sans-serif', weight: 400 },
+  { label: 'Archivo Black', css: '"Archivo Black", "Arial Black", sans-serif', weight: 400 },
+  { label: 'Bebas Neue', css: '"Bebas Neue", Impact, sans-serif', weight: 400 },
+  { label: 'Rubik Mono One', css: '"Rubik Mono One", "Arial Black", sans-serif', weight: 400 },
+  { label: 'Bricolage Grotesque', css: '"Bricolage Grotesque", "Arial Black", sans-serif', weight: 800 },
+  { label: 'Arial Black', css: '"Arial Black", Arial, sans-serif', weight: 900 },
 ];
 
 /** Text frames are drawn on a square this size, then fitted to the output format. */
 const SIZE = 1000;
 
 /**
- * @param {import('../state.js').TextSettings} T
- * @returns {Promise<import('../state.js').Frame[]>}
+ * @param {typeof import('../stores/state.svelte.js').settings.text} T
+ * @returns {Promise<import('../stores/state.svelte.js').Frame[]>}
  */
 export async function renderTextFrames(T) {
   const F = FONTS[T.font];

@@ -64,7 +64,7 @@ export function decodeGif(bytes, name) {
  * @param {number} start
  * @param {number} end
  * @param {number} count
- * @returns {import('../state.js').Frame[]}
+ * @returns {import('../stores/state.svelte.js').Frame[]}
  */
 export function sampleGif(gif, start, end, count) {
   const span = end - start + 1;

@@ -9,7 +9,7 @@ const STRIP = /(?:Striscia|Strip) ([\d.]+) mm/;
 const AT_EDGE = /al bordo|at edge/;
 
 /**
- * @param {import('./library.js').SavedAnimation} record
+ * @param {import('../stores/library.svelte.js').SavedAnimation} record
  * @returns {Promise<number>} the frame count, or 0 when it can't be measured
  */
 export async function framesFromGrid(record) {

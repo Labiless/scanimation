@@ -1,4 +1,4 @@
-/* Reusable building blocks: panels, layout helpers, buttons, segmented toggles, drop zones */
+/* Shared building blocks used across components: panels, layout helpers, buttons, toggles, drop zones */
 .panel {
   border: 1px solid var(--ink);
   padding: 10px;
@@ -84,15 +84,6 @@
 .note.error::before,
 .note.warn::before {
   content: '! ';
-}
-
-.tag {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: 1px solid var(--ink);
-  padding: 1px 5px;
 }
 
 /* buttons */
@@ -198,4 +189,12 @@ button.primary:disabled:hover {
 
 .drop .note {
   flex: 1;
+}
+
+/* stacked source controls (GIF and Text tabs) */
+.gifbox,
+.gifctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }

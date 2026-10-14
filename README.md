@@ -10,73 +10,78 @@ Requires Node.js 20 or later.
 
 ```sh
 npm install
-npm run dev        # development server with live reload, http://localhost:5173
+npm run dev        # development server with hot reload, http://localhost:5173
 npm run build      # production build in dist/
 npm run preview    # serve the production build
-npm run lint       # ESLint
-npm run format     # Prettier
+npm run lint       # ESLint (JavaScript and Svelte)
+npm run format     # Prettier (JavaScript, Svelte, CSS, HTML)
 ```
 
-The app uses ES modules, so open it through `npm run dev` (or any static server serving `dist/`),
-not by double-clicking `index.html`: browsers block modules loaded from `file://`.
+Open the app through `npm run dev` (or any static server serving `dist/`), not by double-clicking
+`index.html`: browsers block ES modules loaded from `file://`.
 
 `npm run build:artifact` also writes `dist/artifact.html`, the same page without the document
 wrapper, for publishing as a claude.ai artifact together with `dist/assets/`.
 
+## Stack
+
+- [Svelte 5](https://svelte.dev) with runes (`$state`, `$derived`, `$effect`) for the interface
+- [Vite](https://vite.dev) for the development server and the build
+- [jsPDF](https://github.com/parallax/jsPDF) for the A4 PDFs (loaded on demand) and
+  [omggif](https://github.com/deanm/omggif) to decode GIFs
+- ESLint and Prettier
+
 ## Project structure
 
 ```
-index.html                 page markup; loads src/main.js
-public/favicon.svg
+index.html                 page shell: fonts, favicon, <div id="app">
 src/
-  main.js                  entry point: imports the styles and initialises every module
-  state.js                 application state, defaults and derived values (frame order, px↔mm…)
-  frames.js                replace the frame list and announce the change
-  render.js                rebuilds the interlaced image and the preview grid from the state
-  session.js               keeps the work in progress across reloads (IndexedDB)
-  core/                    pure image work, no DOM
+  main.js                  mounts the app and loads the global styles
+  App.svelte               layout; re-renders the animation and keeps the session saved
+  components/              one component per panel
+    SourcePanel.svelte     Images / Animated GIF / Text tabs, image loading, delete and reverse
+    GifSource.svelte       GIF link or file, frame count and range
+    TextSource.svelte      text and animation settings
+    FrameStrip.svelte      frame thumbnails: reorder, remove
+    GridPanel.svelte       motion, strip width or rays, aperture, loop, reset
+    FormatPanel.svelte     aspect ratio and dpi
+    SizePanel.svelte       size in px or mm, figure size
+    ColourPanel.svelte     silhouette, posterize, original; invert, fill, blur
+    ExportPanel.svelte     PNG downloads, save for printing, editing state
+    Preview.svelte         live preview, toolbar, dragging the grid
+    Measurements.svelte    strip, slit, bar, period, brightness, format
+    PrintSection.svelte    Print on A4: saved animations, sheet options and previews, PDFs
+  stores/                  reactive state and the actions on it (.svelte.js = uses runes)
+    state.svelte.js        settings, page options, frames and GIF, derived values (px↔mm…)
+    render.svelte.js       rebuilds the interlaced image and the preview grid
+    sources.svelte.js      loading images, GIFs and text; reordering and deleting frames
+    format.js              size rules: clamping, aspect ratio, dpi changes
+    library.svelte.js      saved animations: save, update, edit, copies, delete
+    session.svelte.js      keeps the work in progress across reloads
+  core/                    pure image work, no DOM or framework
     interlace.js           colour treatment, interlacing, linear and circular grids
     png-dpi.js             writes the print resolution into PNG files
     info.js                the settings line printed above each piece
-  sources/                 where frames come from
-    images.js              image files
-    gif.js                 animated GIF decoding and frame sampling
-    text.js                text animations (3D turns, spin, letters appearing)
-  ui/                      one module per panel of the editor
-    frame-strip.js         thumbnails: reorder, remove, reverse, delete all
-    source-panel.js        Images / Animated GIF / Text tabs, image loading
-    gif-panel.js           GIF link or file, frame count and range
-    text-panel.js          text and animation settings
-    grid-controls.js       motion, strip width or rays, aperture, loop, reset
-    format-controls.js     aspect ratio, dpi, size in px or mm, figure size
-    colour-controls.js     silhouette, posterize, original; invert, fill, blur
-    preview.js             live preview, toolbar, dragging the grid
-    measurements.js        strip, slit, bar, period, brightness, format
-    export-panel.js        PNG downloads
-    editing.js             which saved animation is being updated
-    sync.js                refreshes every control after the state is replaced
-  print/                   Print on A4
-    library.js             saved animations: save, update, edit, copies, delete
+  sources/                 frame sources, framework-free
+    images.js · gif.js · text.js
+  print/                   A4 layout and PDFs, framework-free
     layout.js              shelf packing on A4 sheets
-    sheets.js              sheet previews and the PDFs (jsPDF, loaded on demand)
+    sheets.js              sheet previews and PDFs
     migrate.js             adds the frame count to animations saved by early versions
   lib/                     small generic helpers
-    dom.js                 $, segmented toggles, debounce, drop zones
-    events.js              publish/subscribe bus between modules
+    attachments.js         Svelte attachments: drop zone, thumbnail, blob image, canvas mount
     canvas.js              canvas creation, PNG encoding, fit-inside drawing
     storage.js             IndexedDB stores (saved animations, session)
     download.js            file downloads (viewer save dialog or plain link)
-  styles/
+  styles/                  global styles; component styles live in each .svelte file
     tokens.css             colours and fonts, light and dark
-    base.css               reset, page frame, typography, form controls
+    base.css               reset, headings, form controls
     components.css         panels, layout helpers, buttons, toggles, drop zones
-    editor.css             editor layout, frame strip, preview, measurements
-    print.css              Print on A4 section
 ```
 
-Modules talk through direct imports where the dependency is natural (a panel calls the renderer)
-and through the event bus in `lib/events.js` where it would otherwise loop: `frames:changed`,
-`render:done` and `session:dirty`.
+The interface reads and writes `settings` directly (`bind:value`), and the app re-renders whatever
+depends on it. Image processing, GIF and text rendering, A4 layout and PDF generation are plain
+JavaScript modules that know nothing about Svelte.
 
 ## Printing
 

@@ -4,7 +4,7 @@ import { canvasFromBlob } from '../lib/canvas.js';
  * Read image files into frames, ordered by file name (numbers sorted naturally).
  * Unreadable files are skipped.
  * @param {Iterable<File>} files
- * @returns {Promise<import('../state.js').Frame[]>}
+ * @returns {Promise<import('../stores/state.svelte.js').Frame[]>}
  */
 export async function readImageFiles(files) {
   const images = [...files]
