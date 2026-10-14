@@ -1,0 +1,201 @@
+/* Reusable building blocks: panels, layout helpers, buttons, segmented toggles, drop zones */
+.panel {
+  border: 1px solid var(--ink);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.row.between {
+  justify-content: space-between;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px 8px;
+}
+
+.cols2,
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px 8px;
+}
+
+.pair {
+  gap: 8px;
+}
+
+.pair.inner {
+  gap: 8px 16px;
+}
+
+@media (max-width: 560px) {
+  .pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.field label,
+.lbl {
+  font-size: 12px;
+}
+
+.field label b,
+.lbl b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.note {
+  font-size: 11px;
+  margin: 0;
+}
+
+.note.error,
+.note.warn {
+  font-weight: 700;
+}
+
+.note.error::before,
+.note.warn::before {
+  content: '! ';
+}
+
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--ink);
+  padding: 1px 5px;
+}
+
+/* buttons */
+button,
+.btn {
+  font: inherit;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+button:hover,
+.btn:hover {
+  background: var(--ink);
+  color: var(--inv);
+}
+
+button.primary,
+.btn.primary {
+  background: var(--cta);
+  border-color: var(--cta);
+  color: #000;
+  font-weight: 700;
+}
+
+button.primary:hover,
+.btn.primary:hover {
+  background: #000;
+  border-color: var(--cta);
+  color: var(--cta);
+}
+
+button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button.primary:disabled:hover {
+  background: var(--cta);
+  color: #000;
+}
+
+.icon-btn {
+  padding: 3px;
+  line-height: 0;
+}
+
+/* segmented toggles: one pressed button per group */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--ink);
+  flex-wrap: wrap;
+}
+
+.seg button {
+  border: 0;
+  padding: 4px 9px;
+}
+
+.seg button + button {
+  border-left: 1px solid var(--ink);
+}
+
+.seg button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--inv);
+}
+
+/* drop zones */
+.drop {
+  border: 1px dashed var(--ink);
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.drop.over {
+  border-style: solid;
+  background: var(--ink);
+  color: var(--inv);
+}
+
+.drop .note {
+  flex: 1;
+}

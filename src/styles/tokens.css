@@ -1,0 +1,25 @@
+/* Design tokens: black and white only, yellow for the main actions; square corners everywhere */
+:root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --inv: #ffffff;
+  --cta: #ffd400; /* yellow marks the main actions only, same in both themes */
+  --font: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #000000;
+    --ink: #ffffff;
+    --inv: #000000;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #000000;
+  --ink: #ffffff;
+  --inv: #000000;
+  color-scheme: dark;
+}

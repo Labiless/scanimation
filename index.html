@@ -1,1591 +1,375 @@
-<title>Scanimation Studio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Rubik+Mono+One&display=swap">
-<style>
-/* Layout: compact control deck above a full-width live preview; black and white only, square corners */
-:root {
-  --bg: #ffffff;
-  --ink: #000000;
-  --inv: #ffffff;
-  --cta: #ffd400; /* yellow marks the main actions only, same in both themes */
-  --font: "Roboto", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #000000; --ink: #ffffff; --inv: #000000; color-scheme: dark; }
-}
-:root[data-theme="dark"] { --bg: #000000; --ink: #ffffff; --inv: #000000; color-scheme: dark; }
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Scanimation Studio</title>
+    <meta
+      name="description"
+      content="Make scanimations (barrier-grid animations) from images, GIFs or text, and lay them out on A4 sheets at real size."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- UI typeface (Roboto) and the display faces offered for text animations -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Rubik+Mono+One&display=swap"
+    />
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Scanimation Studio</h1>
+        <p>Drag the grid on the preview to move it by hand.</p>
+      </header>
 
-* { box-sizing: border-box; border-radius: 0 !important; }
-[hidden] { display: none !important; }
-body {
-  background: var(--bg); color: var(--ink);
-  font-family: var(--font); font-size: 13px; line-height: 1.4;
-  padding: 12px 16px 32px;
-}
-.wrap { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
-h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
-header p { margin: 0; font-size: 12px; }
+      <!-- Editor: controls stacked on the left, live preview on the right -->
+      <div class="editor">
+        <div class="controls-col">
+          <section class="panel" aria-label="Frames">
+            <div class="row between">
+              <div class="seg" role="group" aria-label="Frame source">
+                <button type="button" id="srcImg" aria-pressed="true">Images</button>
+                <button type="button" id="srcGif" aria-pressed="false">Animated GIF</button>
+                <button type="button" id="srcTxt" aria-pressed="false">Text</button>
+              </div>
+              <div class="row">
+                <button id="reverseBtn" type="button">Reverse order</button>
+                <button id="clearBtn" type="button">Delete all frames</button>
+              </div>
+            </div>
 
-/* editor: controls on the left, preview on the right */
-.editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 8px; align-items: start; }
-.controls-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.pair.inner { gap: 8px 16px; }
-.icon-btn { padding: 3px; line-height: 0; }
-.stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.editor > .stage-panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); max-height: calc(100vh - 16px); overflow-y: auto; }
-@media (max-width: 1000px) {
-  .editor { grid-template-columns: minmax(0, 1fr); }
-  .editor > .stage-panel { order: -1; top: env(safe-area-inset-top, 0px); max-height: 60vh; z-index: 2; background: var(--bg); }
-}
-@media (max-width: 560px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+            <div class="drop" id="drop">
+              <label class="btn primary" for="fileIn">Choose images…</label>
+              <span class="note">or drop them here, in order</span>
+              <input id="fileIn" type="file" accept="image/*" multiple hidden />
+            </div>
 
-.panel { border: 1px solid var(--ink); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
-.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.row.between { justify-content: space-between; }
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 8px; }
-.cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
-.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.field label, .lbl { font-size: 12px; }
-.field label b, .lbl b { font-family: var(--font-mono); font-weight: 500; }
-.note { font-size: 11px; margin: 0; }
-.note.error, .note.warn { font-weight: 700; }
-.note.error::before, .note.warn::before { content: "! "; }
+            <div class="gifbox" id="gifBox" hidden>
+              <form class="row" id="gifForm">
+                <input
+                  id="gifUrl"
+                  type="url"
+                  placeholder="https://…/animation.gif"
+                  aria-label="GIF link"
+                  style="flex: 1 1 180px; width: auto"
+                />
+                <button type="submit" class="primary">Load link</button>
+                <label class="btn" for="gifFile">Choose GIF…</label>
+                <input id="gifFile" type="file" accept="image/gif" hidden />
+              </form>
+              <div class="drop" id="gifDrop"><span class="note">or drop a .gif file here</span></div>
+              <p class="note" id="gifStatus" role="status">
+                Direct links to .gif files or Giphy pages. If the site blocks the link, download the GIF and
+                load it as a file.
+              </p>
+              <div class="gifctrl cols" id="gifCtrl" hidden>
+                <div class="field">
+                  <label for="gifN">Frames: <b id="gifNVal">6</b></label>
+                  <input id="gifN" type="range" min="2" max="12" value="6" />
+                </div>
+                <div class="field">
+                  <label for="gifStart">From frame</label
+                  ><input id="gifStart" type="number" min="1" value="1" />
+                </div>
+                <div class="field">
+                  <label for="gifEnd">To frame</label><input id="gifEnd" type="number" min="1" value="1" />
+                </div>
+              </div>
+            </div>
 
-input[type="number"], input[type="url"], input[type="text"], select, textarea {
-  font: inherit; font-family: var(--font-mono); font-size: 12px; color: var(--ink);
-  background: var(--bg); border: 1px solid var(--ink); padding: 4px 6px; width: 100%; min-width: 0;
-}
-textarea { resize: vertical; font-family: var(--font) !important; font-size: 14px !important; }
-input[type="range"] { width: 100%; accent-color: var(--ink); margin: 2px 0; }
-input[type="checkbox"] { accent-color: var(--ink); margin: 0 4px 0 0; vertical-align: -2px; }
-input[type="color"] { width: 34px; height: 26px; padding: 1px; border: 1px solid var(--ink); background: var(--bg); cursor: pointer; flex: none; }
+            <div class="gifbox" id="textBox" hidden>
+              <div class="cols">
+                <div class="field" style="grid-column: span 2">
+                  <label for="txt">Text (Enter for a new line)</label>
+                  <textarea id="txt" rows="1">HELLO</textarea>
+                </div>
+                <div class="field">
+                  <label for="txtFont">Typeface</label>
+                  <select id="txtFont">
+                    <option value="0">Anton</option>
+                    <option value="1" selected>Archivo Black</option>
+                    <option value="2">Bebas Neue</option>
+                    <option value="3">Rubik Mono One</option>
+                    <option value="4">Bricolage Grotesque</option>
+                    <option value="5">Arial Black</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="txtAnim">Animation</label>
+                  <select id="txtAnim">
+                    <option value="ry">Rotate Y (door)</option>
+                    <option value="rx">Rotate X (flip)</option>
+                    <option value="rz">Rotate Z (spin)</option>
+                    <option value="ltr">Letters from the left</option>
+                    <option value="rtl">Letters from the right</option>
+                  </select>
+                </div>
+                <div class="field" id="txtAngleField">
+                  <label for="txtAngle">Range: <b id="txtAngleVal">360°</b></label>
+                  <input id="txtAngle" type="range" min="15" max="360" step="15" value="360" />
+                </div>
+                <div class="field" id="txtPerspField">
+                  <label for="txtPersp">Perspective: <b id="txtPerspVal">40%</b></label>
+                  <input id="txtPersp" type="range" min="0" max="100" step="5" value="40" />
+                </div>
+                <div class="field">
+                  <label for="txtN">Frames: <b id="txtNVal">6</b></label>
+                  <input id="txtN" type="range" min="2" max="12" value="6" />
+                </div>
+              </div>
+              <p class="note" id="txtNote">Below 360°, use the "Back and forth" loop to make it swing.</p>
+            </div>
 
-button, .btn {
-  font: inherit; font-weight: 500; font-size: 12px; cursor: pointer;
-  border: 1px solid var(--ink); background: var(--bg); color: var(--ink);
-  padding: 5px 10px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-}
-button:hover, .btn:hover { background: var(--ink); color: var(--inv); }
-button.primary, .btn.primary { background: var(--cta); border-color: var(--cta); color: #000; font-weight: 700; }
-button.primary:hover, .btn.primary:hover { background: #000; border-color: var(--cta); color: var(--cta); }
-button.primary:disabled:hover { background: var(--cta); color: #000; }
-button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-button:disabled { opacity: .4; cursor: not-allowed; }
-button:disabled:hover { background: var(--bg); color: var(--ink); }
-.seg { display: inline-flex; border: 1px solid var(--ink); flex-wrap: wrap; }
-.seg button { border: 0; padding: 4px 9px; }
-.seg button + button { border-left: 1px solid var(--ink); }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--inv); }
-.seg.wide { display: flex; }
-.seg.wide button { flex: 1; justify-content: center; }
-
-/* sources */
-.drop { border: 1px dashed var(--ink); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.drop.over { border-style: solid; background: var(--ink); color: var(--inv); }
-.drop .note { flex: 1; }
-.gifbox, .gifctrl { display: flex; flex-direction: column; gap: 6px; }
-.tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--ink); padding: 1px 5px; }
-
-/* frames as a horizontal strip */
-.frames {
-  list-style: none; margin: 0; padding: 6px; display: flex; gap: 6px; overflow-x: auto;
-  border: 1px solid var(--ink); min-height: 92px;
-}
-.frames li { display: flex; flex-direction: column; gap: 3px; flex: none; }
-.frames canvas { width: 76px; height: 56px; border: 1px solid var(--ink); background: #fff; display: block; }
-.frames .name { display: none; }
-.frames li { position: relative; }
-.frames li.empty { align-self: center; font-size: 12px; padding: 0 6px; position: static; }
-.frames .idx { position: absolute; top: 1px; left: 1px; font-family: var(--font-mono); font-size: 10px; background: #000; color: #fff; padding: 0 3px; }
-.frames .acts { display: flex; }
-.frames .acts button { padding: 1px 0; font-size: 11px; flex: 1; justify-content: center; }
-.frames .acts button + button { border-left: 0; }
-
-/* exports */
-.actions .row button { flex: 1 1 auto; justify-content: center; }
-.exports { display: flex; flex-wrap: wrap; gap: 8px; }
-.exports figure { margin: 0; display: flex; flex-direction: column; gap: 4px; flex: 1 1 180px; min-width: 0; }
-.exports img { border: 1px solid var(--ink); background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 12px 12px; max-width: 100%; }
-.exports figcaption { font-size: 11px; }
-.fig-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
-.fig-close { padding: 2px 8px; font-size: 11px; }
-
-/* preview */
-.stage-panel { gap: 6px; }
-.stage {
-  border: 1px solid var(--ink); overflow: auto; display: flex; justify-content: center; align-items: flex-start;
-  padding: 10px; touch-action: none;
-}
-.stage canvas { display: block; background: #fff; outline: 1px solid var(--ink); cursor: ew-resize; }
-.stage.fit canvas { max-width: 100%; max-height: max(260px, calc(100vh - 170px)); width: auto; height: auto; }
-@media (max-width: 1000px) { .stage.fit canvas { max-height: 34vh; } }
-.stage.horiz canvas { cursor: ns-resize; }
-.stage.radial canvas { cursor: grab; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
-.toolbar select { width: auto; }
-.speed { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 0; }
-.speed label { white-space: nowrap; font-size: 12px; }
-.readout { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
-.readout b { font-weight: 500; }
-.spec {
-  font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums;
-  display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 0; padding-top: 6px; border-top: 1px solid var(--ink);
-}
-.spec dt { font-weight: 400; } .spec dt::after { content: ":"; }
-.spec dd { margin: 0 0 0 -10px; font-weight: 500; }
-
-/* A4 print section */
-.print-box { display: block; }
-.print-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; cursor: pointer; list-style: none; }
-.print-head::-webkit-details-marker { display: none; }
-.print-head::after { content: "+ Show"; grid-column: 2; grid-row: 1; font-size: 12px; font-weight: 700; border: 1px solid var(--ink); padding: 2px 8px; }
-.print-box[open] > .print-head::after { content: "− Hide"; }
-.print-head .note { grid-column: 1; }
-.print-head:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.print-box[open] > .print-grid { margin-top: 12px; }
-.print-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 860px) { .print-grid { grid-template-columns: minmax(0, 1fr); } }
-.print-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.print-side .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.plist li { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 4px; border: 1px solid var(--ink); }
-.plist img { width: 44px; height: 44px; object-fit: contain; background: #fff; border: 1px solid var(--ink); }
-.pname { display: flex; flex-direction: column; min-width: 0; font-size: 12px; }
-.pname b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pname small { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
-.copies { display: flex; align-items: center; gap: 4px; font-size: 11px; }
-.copies input { width: 54px; padding: 3px 5px; }
-.plist li > button { padding: 2px 8px; font-size: 12px; }
-.plist li.editing { outline: 3px solid var(--cta); outline-offset: -1px; }
-.sheets { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.sheet-pair figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.sheet-pair canvas { width: 100%; height: auto; background: #fff; border: 1px solid var(--ink); }
-.sheet-pair figcaption { font-size: 11px; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-</style>
-
-<div class="wrap">
-  <header>
-    <h1>Scanimation Studio</h1>
-    <p>Drag the grid on the preview to move it by hand.</p>
-  </header>
-
-  <!-- Editor: controls stacked on the left, live preview on the right -->
-  <div class="editor">
-    <div class="controls-col">
-    <section class="panel" aria-label="Frames">
-      <div class="row between">
-        <div class="seg" role="group" aria-label="Frame source">
-          <button type="button" id="srcImg" aria-pressed="true">Images</button>
-          <button type="button" id="srcGif" aria-pressed="false">Animated GIF</button>
-          <button type="button" id="srcTxt" aria-pressed="false">Text</button>
-        </div>
-        <div class="row">
-          <button id="reverseBtn" type="button">Reverse order</button>
-          <button id="clearBtn" type="button">Delete all frames</button>
-        </div>
-      </div>
-
-      <div class="drop" id="drop">
-        <label class="btn primary" for="fileIn">Choose images…</label>
-        <span class="note">or drop them here, in order</span>
-        <input id="fileIn" type="file" accept="image/*" multiple hidden>
-      </div>
-
-      <div class="gifbox" id="gifBox" hidden>
-        <form class="row" id="gifForm">
-          <input id="gifUrl" type="url" placeholder="https://…/animation.gif" aria-label="GIF link" style="flex:1 1 180px; width:auto">
-          <button type="submit" class="primary">Load link</button>
-          <label class="btn" for="gifFile">Choose GIF…</label>
-          <input id="gifFile" type="file" accept="image/gif" hidden>
-        </form>
-        <div class="drop" id="gifDrop"><span class="note">or drop a .gif file here</span></div>
-        <p class="note" id="gifStatus" role="status">Direct links to .gif files or Giphy pages. If the site blocks the link, download the GIF and load it as a file.</p>
-        <div class="gifctrl cols" id="gifCtrl" hidden>
-          <div class="field">
-            <label for="gifN">Frames: <b id="gifNVal">6</b></label>
-            <input id="gifN" type="range" min="2" max="12" value="6">
+            <ul class="frames" id="frameList" aria-label="Frames in order"></ul>
+          </section>
+          <section class="panel" aria-labelledby="h-grid">
+            <div class="row between">
+              <h2 id="h-grid">Grid</h2>
+              <button
+                type="button"
+                id="gridReset"
+                class="icon-btn"
+                title="Reset grid to defaults"
+                aria-label="Reset grid settings to defaults"
+              >
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                  <path d="M3 8a5 5 0 1 0 1.6-3.7" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M2.5 1.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" />
+                </svg>
+              </button>
+            </div>
+            <div class="pair inner">
+              <div class="stack">
+                <div class="row">
+                  <span class="lbl">Motion</span>
+                  <div class="seg" role="group" aria-label="Grid motion">
+                    <button type="button" id="oriV" aria-pressed="true">Vertical</button>
+                    <button type="button" id="oriH" aria-pressed="false">Horizontal</button>
+                    <button type="button" id="oriR" aria-pressed="false">Circular</button>
+                  </div>
+                </div>
+                <div class="field" id="slitField">
+                  <label for="slit">Strip width: <b id="slitVal">2 px</b></label>
+                  <input id="slit" type="range" min="1" max="24" value="2" />
+                </div>
+                <div class="field" id="raysField" hidden>
+                  <label for="rays">Number of rays: <b id="raysVal">48</b></label>
+                  <input id="rays" type="range" min="6" max="240" value="48" />
+                </div>
+                <p class="note" id="radialNote" hidden>
+                  Slits narrow towards the centre: keep subjects towards the outside.
+                </p>
+              </div>
+              <div class="stack">
+                <div class="row">
+                  <span class="lbl">Loop</span>
+                  <div class="seg" role="group" aria-label="Animation loop">
+                    <button type="button" id="loopOn" aria-pressed="true">Continuous</button>
+                    <button type="button" id="loopOff" aria-pressed="false">Back and forth</button>
+                  </div>
+                </div>
+                <div
+                  class="field"
+                  title="Below 100% the image is sharper but darker; above 100% it is brighter but neighbouring frames blend."
+                >
+                  <label for="aperture">Slit aperture: <b id="apertureVal">75%</b></label>
+                  <input id="aperture" type="range" min="25" max="200" step="5" value="75" />
+                </div>
+              </div>
+            </div>
+          </section>
+          <div class="pair">
+            <section class="panel" aria-labelledby="h-size">
+              <h2 id="h-size">Print format</h2>
+              <div class="cols2">
+                <div class="field">
+                  <label for="ratio">Aspect ratio</label>
+                  <select id="ratio">
+                    <option value="1" selected>1:1 square</option>
+                    <option value="1.3333">4:3 landscape</option>
+                    <option value="1.5">3:2 landscape</option>
+                    <option value="1.7778">16:9 landscape</option>
+                    <option value="2">2:1 landscape</option>
+                    <option value="3">3:1 strip</option>
+                    <option value="0.75">3:4 portrait</option>
+                    <option value="0.6667">2:3 portrait</option>
+                    <option value="0.5">1:2 portrait</option>
+                    <option value="free">Free</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="dpi">Resolution (dpi)</label>
+                  <select id="dpi">
+                    <option value="150">150</option>
+                    <option value="300" selected>300</option>
+                    <option value="600">600</option>
+                    <option value="1200">1200</option>
+                  </select>
+                </div>
+              </div>
+              <p class="note">PNGs carry the dpi: printed at 100% they come out at the size shown.</p>
+            </section>
+            <section class="panel" aria-label="Size">
+              <div class="cols2">
+                <div class="field">
+                  <label for="wPx">Width (px)</label
+                  ><input id="wPx" type="number" min="100" max="5000" value="800" />
+                </div>
+                <div class="field">
+                  <label for="wMm">Width (mm)</label
+                  ><input id="wMm" type="number" min="5" max="1000" step="0.1" value="67.73" />
+                </div>
+                <div class="field">
+                  <label for="hPx">Height (px)</label
+                  ><input id="hPx" type="number" min="100" max="5000" value="800" />
+                </div>
+                <div class="field">
+                  <label for="hMm">Height (mm)</label
+                  ><input id="hMm" type="number" min="5" max="1000" step="0.1" value="67.73" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="figScale">Figure size: <b id="figScaleVal">100%</b></label>
+                <input id="figScale" type="range" min="10" max="100" step="5" value="100" />
+              </div>
+            </section>
           </div>
-          <div class="field"><label for="gifStart">From frame</label><input id="gifStart" type="number" min="1" value="1"></div>
-          <div class="field"><label for="gifEnd">To frame</label><input id="gifEnd" type="number" min="1" value="1"></div>
-        </div>
-      </div>
-
-      <div class="gifbox" id="textBox" hidden>
-        <div class="cols">
-          <div class="field" style="grid-column: span 2">
-            <label for="txt">Text (Enter for a new line)</label>
-            <textarea id="txt" rows="1">HELLO</textarea>
+          <div class="pair">
+            <section class="panel" aria-label="Colour">
+              <div class="row">
+                <span class="lbl">Colour</span>
+                <div class="seg" role="group" aria-label="Colour">
+                  <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
+                  <button type="button" id="modePost" aria-pressed="false">Posterize</button>
+                  <button type="button" id="modeOrig" aria-pressed="false">Original</button>
+                </div>
+              </div>
+              <div class="field" id="threshField">
+                <label for="thresh">Silhouette threshold: <b id="threshVal">140</b></label>
+                <input id="thresh" type="range" min="10" max="245" value="140" />
+              </div>
+              <div class="field" id="postField" hidden>
+                <label for="levels">Levels per channel: <b id="levelsVal">3</b></label>
+                <input id="levels" type="range" min="2" max="8" value="3" />
+                <label class="lbl"><input id="gray" type="checkbox" checked />Greyscale</label>
+              </div>
+              <label class="lbl"><input id="invert" type="checkbox" />Invert black and white</label>
+            </section>
+            <section class="panel" aria-label="Fill and blur">
+              <div class="row" id="fillField">
+                <input id="fill" type="color" value="#000000" aria-label="Fill colour" />
+                <label class="lbl" for="fill">Fill colour <b id="fillVal">#000000</b></label>
+              </div>
+              <div class="field">
+                <label for="blur">Edge blur: <b id="blurVal">0 px</b></label>
+                <input id="blur" type="range" min="0" max="12" step="0.5" value="0" />
+              </div>
+            </section>
           </div>
-          <div class="field">
-            <label for="txtFont">Typeface</label>
-            <select id="txtFont">
-              <option value="0">Anton</option>
-              <option value="1" selected>Archivo Black</option>
-              <option value="2">Bebas Neue</option>
-              <option value="3">Rubik Mono One</option>
-              <option value="4">Bricolage Grotesque</option>
-              <option value="5">Arial Black</option>
+          <section class="panel actions" aria-label="Export and save">
+            <div class="row">
+              <button id="saveGrid" type="button" class="primary">Download grid (transparent PNG)</button>
+              <button id="saveBase" type="button" class="primary">Download base image (PNG)</button>
+            </div>
+            <label class="lbl"
+              ><input id="infoBand" type="checkbox" checked />Add a line with the settings above the
+              image</label
+            >
+            <div class="row">
+              <input
+                id="animName"
+                type="text"
+                placeholder="Name (optional)"
+                aria-label="Animation name"
+                style="flex: 1 1 140px; width: auto"
+              />
+              <button id="saveAnim" type="button" class="primary">Save for printing</button>
+              <button id="saveAsNew" type="button" hidden>Save as new</button>
+            </div>
+            <div class="row" id="editNote" hidden>
+              <span class="note">Editing <b id="editName"></b>: "Update" overwrites the saved one.</span>
+              <button id="stopEdit" type="button">Stop editing</button>
+            </div>
+            <p class="note" id="saveMsg" role="status"></p>
+            <div class="exports" id="exports" hidden></div>
+          </section>
+        </div>
+
+        <section class="panel stage-panel" aria-label="Preview">
+          <div class="stage fit" id="stage"><canvas id="view" aria-label="Animation preview"></canvas></div>
+          <div class="toolbar">
+            <button id="playBtn" type="button">Pause</button>
+            <button id="stepBtn" type="button">Next frame</button>
+            <div class="seg" role="group" aria-label="View">
+              <button type="button" id="viewGrid" aria-pressed="true">With grid</button>
+              <button type="button" id="viewBase" aria-pressed="false">Base only</button>
+            </div>
+            <select id="zoom" aria-label="Zoom">
+              <option value="fit">Fit</option>
+              <option value="1">100%</option>
+              <option value="2">200%</option>
             </select>
-          </div>
-          <div class="field">
-            <label for="txtAnim">Animation</label>
-            <select id="txtAnim">
-              <option value="ry">Rotate Y (door)</option>
-              <option value="rx">Rotate X (flip)</option>
-              <option value="rz">Rotate Z (spin)</option>
-              <option value="ltr">Letters from the left</option>
-              <option value="rtl">Letters from the right</option>
-            </select>
-          </div>
-          <div class="field" id="txtAngleField">
-            <label for="txtAngle">Range: <b id="txtAngleVal">360°</b></label>
-            <input id="txtAngle" type="range" min="15" max="360" step="15" value="360">
-          </div>
-          <div class="field" id="txtPerspField">
-            <label for="txtPersp">Perspective: <b id="txtPerspVal">40%</b></label>
-            <input id="txtPersp" type="range" min="0" max="100" step="5" value="40">
-          </div>
-          <div class="field">
-            <label for="txtN">Frames: <b id="txtNVal">6</b></label>
-            <input id="txtN" type="range" min="2" max="12" value="6">
-          </div>
-        </div>
-        <p class="note" id="txtNote">Below 360°, use the "Back and forth" loop to make it swing.</p>
-      </div>
-
-      <ul class="frames" id="frameList" aria-label="Frames in order"></ul>
-    </section>
-    <section class="panel" aria-labelledby="h-grid">
-      <div class="row between">
-        <h2 id="h-grid">Grid</h2>
-        <button type="button" id="gridReset" class="icon-btn" title="Reset grid to defaults" aria-label="Reset grid settings to defaults">
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 1.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-        </button>
-      </div>
-      <div class="pair inner">
-        <div class="stack">
-      <div class="row">
-        <span class="lbl">Motion</span>
-        <div class="seg" role="group" aria-label="Grid motion">
-          <button type="button" id="oriV" aria-pressed="true">Vertical</button>
-          <button type="button" id="oriH" aria-pressed="false">Horizontal</button>
-          <button type="button" id="oriR" aria-pressed="false">Circular</button>
-        </div>
-      </div>
-      <div class="field" id="slitField">
-        <label for="slit">Strip width: <b id="slitVal">2 px</b></label>
-        <input id="slit" type="range" min="1" max="24" value="2">
-      </div>
-      <div class="field" id="raysField" hidden>
-        <label for="rays">Number of rays: <b id="raysVal">48</b></label>
-        <input id="rays" type="range" min="6" max="240" value="48">
-      </div>
-      <p class="note" id="radialNote" hidden>Slits narrow towards the centre: keep subjects towards the outside.</p>
-    
-        </div>
-        <div class="stack">
-      <div class="row">
-        <span class="lbl">Loop</span>
-        <div class="seg" role="group" aria-label="Animation loop">
-          <button type="button" id="loopOn" aria-pressed="true">Continuous</button>
-          <button type="button" id="loopOff" aria-pressed="false">Back and forth</button>
-        </div>
-      </div>
-      <div class="field" title="Below 100% the image is sharper but darker; above 100% it is brighter but neighbouring frames blend.">
-        <label for="aperture">Slit aperture: <b id="apertureVal">75%</b></label>
-        <input id="aperture" type="range" min="25" max="200" step="5" value="75">
-      </div>
-    
-        </div>
-      </div>
-    </section>
-    <div class="pair">
-    <section class="panel" aria-labelledby="h-size">
-      <h2 id="h-size">Print format</h2>
-      <div class="cols2">
-        <div class="field">
-          <label for="ratio">Aspect ratio</label>
-          <select id="ratio">
-            <option value="1" selected>1:1 square</option>
-            <option value="1.3333">4:3 landscape</option>
-            <option value="1.5">3:2 landscape</option>
-            <option value="1.7778">16:9 landscape</option>
-            <option value="2">2:1 landscape</option>
-            <option value="3">3:1 strip</option>
-            <option value="0.75">3:4 portrait</option>
-            <option value="0.6667">2:3 portrait</option>
-            <option value="0.5">1:2 portrait</option>
-            <option value="free">Free</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="dpi">Resolution (dpi)</label>
-          <select id="dpi">
-            <option value="150">150</option>
-            <option value="300" selected>300</option>
-            <option value="600">600</option>
-            <option value="1200">1200</option>
-          </select>
-        </div>
-      </div>
-      <p class="note">PNGs carry the dpi: printed at 100% they come out at the size shown.</p>
-    </section>
-    <section class="panel" aria-label="Size">
-      <div class="cols2">
-        <div class="field"><label for="wPx">Width (px)</label><input id="wPx" type="number" min="100" max="5000" value="800"></div>
-        <div class="field"><label for="wMm">Width (mm)</label><input id="wMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
-        <div class="field"><label for="hPx">Height (px)</label><input id="hPx" type="number" min="100" max="5000" value="800"></div>
-        <div class="field"><label for="hMm">Height (mm)</label><input id="hMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
-      </div>
-      <div class="field">
-        <label for="figScale">Figure size: <b id="figScaleVal">100%</b></label>
-        <input id="figScale" type="range" min="10" max="100" step="5" value="100">
-      </div>
-    </section>
-    </div>
-    <div class="pair">
-    <section class="panel" aria-label="Colour">
-          <div class="row">
-            <span class="lbl">Colour</span>
-            <div class="seg" role="group" aria-label="Colour">
-              <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
-              <button type="button" id="modePost" aria-pressed="false">Posterize</button>
-              <button type="button" id="modeOrig" aria-pressed="false">Original</button>
+            <div class="speed">
+              <label for="speed">Grid speed: <b id="speedVal">30 px/s</b></label>
+              <input id="speed" type="range" min="2" max="200" value="30" />
             </div>
           </div>
-          <div class="field" id="threshField">
-            <label for="thresh">Silhouette threshold: <b id="threshVal">140</b></label>
-            <input id="thresh" type="range" min="10" max="245" value="140">
-          </div>
-          <div class="field" id="postField" hidden>
-            <label for="levels">Levels per channel: <b id="levelsVal">3</b></label>
-            <input id="levels" type="range" min="2" max="8" value="3">
-            <label class="lbl"><input id="gray" type="checkbox" checked>Greyscale</label>
-          </div>
-          <label class="lbl"><input id="invert" type="checkbox">Invert black and white</label>
+          <div class="readout" id="readout"></div>
+          <dl class="spec" id="spec" aria-label="Measurements"></dl>
         </section>
-    <section class="panel" aria-label="Fill and blur">
-          <div class="row" id="fillField">
-            <input id="fill" type="color" value="#000000" aria-label="Fill colour">
-            <label class="lbl" for="fill">Fill colour <b id="fillVal">#000000</b></label>
-          </div>
-          <div class="field">
-            <label for="blur">Edge blur: <b id="blurVal">0 px</b></label>
-            <input id="blur" type="range" min="0" max="12" step="0.5" value="0">
-          </div>
-        </section>
-    </div>
-    <section class="panel actions" aria-label="Export and save">
-        <div class="row">
-          <button id="saveGrid" type="button" class="primary">Download grid (transparent PNG)</button>
-          <button id="saveBase" type="button" class="primary">Download base image (PNG)</button>
-        </div>
-        <label class="lbl"><input id="infoBand" type="checkbox" checked>Add a line with the settings above the image</label>
-        <div class="row">
-          <input id="animName" type="text" placeholder="Name (optional)" aria-label="Animation name" style="flex:1 1 140px; width:auto">
-          <button id="saveAnim" type="button" class="primary">Save for printing</button>
-          <button id="saveAsNew" type="button" hidden>Save as new</button>
-        </div>
-        <div class="row" id="editNote" hidden>
-          <span class="note">Editing <b id="editName"></b>: "Update" overwrites the saved one.</span>
-          <button id="stopEdit" type="button">Stop editing</button>
-        </div>
-        <p class="note" id="saveMsg" role="status"></p>
-        <div class="exports" id="exports" hidden></div>
-      </section>
-    </div>
-
-  <section class="panel stage-panel" aria-label="Preview">
-    <div class="stage fit" id="stage"><canvas id="view" aria-label="Animation preview"></canvas></div>
-    <div class="toolbar">
-      <button id="playBtn" type="button">Pause</button>
-      <button id="stepBtn" type="button">Next frame</button>
-      <div class="seg" role="group" aria-label="View">
-        <button type="button" id="viewGrid" aria-pressed="true">With grid</button>
-        <button type="button" id="viewBase" aria-pressed="false">Base only</button>
       </div>
-      <select id="zoom" aria-label="Zoom">
-        <option value="fit">Fit</option>
-        <option value="1">100%</option>
-        <option value="2">200%</option>
-      </select>
-      <div class="speed">
-        <label for="speed">Grid speed: <b id="speedVal">30 px/s</b></label>
-        <input id="speed" type="range" min="2" max="200" value="30">
-      </div>
-    </div>
-    <div class="readout" id="readout"></div>
-    <dl class="spec" id="spec" aria-label="Measurements"></dl>
-  </section>
-  </div>
 
-  <details class="panel print-box" id="printBox" open>
-    <summary class="print-head">
-      <h2 id="h-sheet">Print on A4</h2>
-      <span class="note">Saved animations are laid out automatically on two matching sets of sheets: one with the images, one with the grids to print on acetate. Every piece keeps its real size.</span>
-    </summary>
-    <div class="print-grid">
-      <div class="print-side">
-        <ul class="plist" id="printList"></ul>
-        <p class="note" id="printEmpty">No saved animations yet. Set one up and press "Save for printing" at the top.</p>
-        <p class="note" id="storeNote" hidden>This browser can't keep animations: they stay available while the page is open.</p>
-        <div class="cols3">
-          <div class="field"><label for="pOrient">Sheet</label>
-            <select id="pOrient"><option value="p">A4 portrait</option><option value="l">A4 landscape</option></select>
+      <details class="panel print-box" id="printBox" open>
+        <summary class="print-head">
+          <h2 id="h-sheet">Print on A4</h2>
+          <span class="note"
+            >Saved animations are laid out automatically on two matching sets of sheets: one with the images,
+            one with the grids to print on acetate. Every piece keeps its real size.</span
+          >
+        </summary>
+        <div class="print-grid">
+          <div class="print-side">
+            <ul class="plist" id="printList"></ul>
+            <p class="note" id="printEmpty">
+              No saved animations yet. Set one up and press "Save for printing" at the top.
+            </p>
+            <p class="note" id="storeNote" hidden>
+              This browser can't keep animations: they stay available while the page is open.
+            </p>
+            <div class="cols3">
+              <div class="field">
+                <label for="pOrient">Sheet</label>
+                <select id="pOrient">
+                  <option value="p">A4 portrait</option>
+                  <option value="l">A4 landscape</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="pMargin">Margin (mm)</label
+                ><input id="pMargin" type="number" min="0" max="40" step="1" value="10" />
+              </div>
+              <div class="field">
+                <label for="pGap">Gap (mm)</label
+                ><input id="pGap" type="number" min="0" max="30" step="1" value="5" />
+              </div>
+            </div>
+            <label class="lbl"
+              ><input id="pInfo" type="checkbox" checked />Print the settings above each piece</label
+            >
+            <label class="lbl"><input id="pOutline" type="checkbox" checked />Thin cutting outline</label>
+            <div class="row">
+              <button id="pdfBase" type="button" class="primary">Download images PDF</button>
+              <button id="pdfGrid" type="button" class="primary">Download grids PDF</button>
+            </div>
+            <p class="note" id="printMsg" role="status"></p>
+            <p class="note">Print the PDFs at 100% ("Actual size"), without fitting them to the page.</p>
           </div>
-          <div class="field"><label for="pMargin">Margin (mm)</label><input id="pMargin" type="number" min="0" max="40" step="1" value="10"></div>
-          <div class="field"><label for="pGap">Gap (mm)</label><input id="pGap" type="number" min="0" max="30" step="1" value="5"></div>
+          <div class="sheets" id="sheets"></div>
         </div>
-        <label class="lbl"><input id="pInfo" type="checkbox" checked>Print the settings above each piece</label>
-        <label class="lbl"><input id="pOutline" type="checkbox" checked>Thin cutting outline</label>
-        <div class="row">
-          <button id="pdfBase" type="button" class="primary">Download images PDF</button>
-          <button id="pdfGrid" type="button" class="primary">Download grids PDF</button>
-        </div>
-        <p class="note" id="printMsg" role="status"></p>
-        <p class="note">Print the PDFs at 100% ("Actual size"), without fitting them to the page.</p>
-      </div>
-      <div class="sheets" id="sheets"></div>
+      </details>
     </div>
-  </details>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-(() => {
-  const $ = id => document.getElementById(id);
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const S = {
-    frames: [], source: 'img',
-    w: 2, vertical: true, radial: false, rays: 48, aperture: 0.75, loop: true,
-    outW: 800, outH: 800, dpi: 300, lockMm: false, ratio: 1, figScale: 1,
-    mode: 'sil', thresh: 140, invert: false, fill: '#000000', blur: 0, levels: 3, gray: true,
-    gif: null, gifN: 6, gifStart: 1, gifEnd: 1,
-    text: { str: 'HELLO', font: 1, anim: 'ry', angle: 360, persp: 40, n: 6 },
-    speed: 30, rspeed: 6, playing: !reduced, offset: 0, angle: 0, showGrid: true,
-    editingId: null, editingName: ''
-  };
-  // frame order in the strips: 1..N for a loop, 1..N..2 for back-and-forth
-  const order = () => {
-    const n = S.frames.length, idx = [...Array(n).keys()];
-    return S.loop || n < 3 ? idx : idx.concat(idx.slice(1, -1).reverse());
-  };
-  const count = () => order().length;
-  const pxToMm = px => px / S.dpi * 25.4;
-  // radial mode: K rays, each period split in N wedges of angle alpha = 2π / (K·N)
-  const alphaOf = () => Math.PI * 2 / (S.rays * count());
-  const diag = () => Math.ceil(Math.hypot(S.outW, S.outH)) + 4;
-
-  const view = $('view'), vctx = view.getContext('2d');
-  const baseCv = document.createElement('canvas');
-  const gridCv = document.createElement('canvas');
-
-  // ---------- Frame list ----------
-  function renderList() {
-    const ul = $('frameList'); ul.innerHTML = '';
-    S.frames.forEach((f, i) => {
-      const li = document.createElement('li');
-      const th = document.createElement('canvas'); th.width = 108; th.height = 80;
-      const tg = th.getContext('2d'); tg.fillStyle = '#fff'; tg.fillRect(0, 0, 108, 80);
-      drawContain(tg, f.src, 108, 80);
-      li.innerHTML = `<span class="idx">${i + 1}</span>`;
-      li.appendChild(th);
-      const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = f.name; nm.title = f.name; li.appendChild(nm);
-      const acts = document.createElement('span'); acts.className = 'acts';
-      acts.append(
-        mkBtn('←', `Move frame ${i + 1} left`, i === 0, () => move(i, -1)),
-        mkBtn('→', `Move frame ${i + 1} right`, i === S.frames.length - 1, () => move(i, 1)),
-        mkBtn('✕', `Remove frame ${i + 1}`, false, () => { S.frames.splice(i, 1); changed(); })
-      );
-      li.appendChild(acts); ul.appendChild(li);
-    });
-    $('clearBtn').disabled = !S.frames.length;
-    $('reverseBtn').disabled = S.frames.length < 2;
-    if (!S.frames.length) {
-      const li = document.createElement('li'); li.className = 'empty';
-      li.textContent = 'No frames yet: load images, a GIF or type some text.';
-      ul.appendChild(li);
-    }
-  }
-  function mkBtn(t, label, dis, fn) {
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = t;
-    b.setAttribute('aria-label', label); b.disabled = dis; b.onclick = fn; return b;
-  }
-  function move(i, d) { const f = S.frames.splice(i, 1)[0]; S.frames.splice(i + d, 0, f); changed(); }
-  function changed() { framesDirty = true; renderList(); rebuild(); scheduleSave(); }
-
-  // ---------- Text: lay the text out once, then render it per frame ----------
-  const FONTS = [
-    { css: '"Anton", Impact, sans-serif', w: 400 },
-    { css: '"Archivo Black", "Arial Black", sans-serif', w: 400 },
-    { css: '"Bebas Neue", Impact, sans-serif', w: 400 },
-    { css: '"Rubik Mono One", "Arial Black", sans-serif', w: 400 },
-    { css: '"Bricolage Grotesque", "Arial Black", sans-serif', w: 800 },
-    { css: '"Arial Black", Arial, sans-serif', w: 900 }
-  ];
-  const TS = 1000; // text frames are drawn on a 1000 px square, then fitted to the output size
-  let textJob = 0;
-
-  async function makeTextFrames() {
-    const job = ++textJob, T = S.text, F = FONTS[T.font];
-    const font = sz => `${F.w} ${sz}px ${F.css}`;
-    try { await document.fonts.load(font(100), T.str || 'A'); } catch { /* fall back to the stack */ }
-    if (job !== textJob) return; // a newer edit superseded this one
-
-    // layout: every character with its position, sized so the block fills about 84% of the square
-    const lines = (T.str.trim() ? T.str : ' ').split('\n');
-    const m = document.createElement('canvas').getContext('2d'); m.font = font(100);
-    const widest = Math.max(1, ...lines.map(l => m.measureText(l).width));
-    const size = Math.min(100 * TS * 0.84 / widest, TS * 0.84 / (lines.length * 1.1));
-    m.font = font(size);
-    const chars = [];
-    lines.forEach((line, j) => {
-      const y = TS / 2 + (j - (lines.length - 1) / 2) * size * 1.1;
-      const x0 = TS / 2 - m.measureText(line).width / 2;
-      [...line].forEach((ch, k) => chars.push({ ch, x: x0 + m.measureText(line.slice(0, k)).width, y }));
-    });
-    const drawChars = (g, list) => {
-      g.font = font(size); g.textBaseline = 'middle'; g.fillStyle = '#000';
-      list.forEach(c => g.fillText(c.ch, c.x, c.y));
-    };
-    const blank = () => {
-      const c = document.createElement('canvas'); c.width = c.height = TS;
-      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, TS, TS); return [c, g];
-    };
-
-    const n = T.n, frames = [];
-    if (T.anim === 'ltr' || T.anim === 'rtl') {
-      // letters appear one group per frame; spaces don't count as a step
-      const letters = chars.filter(c => c.ch.trim());
-      if (T.anim === 'rtl') letters.reverse();
-      for (let i = 0; i < n; i++) {
-        const k = Math.max(1, Math.round((i + 1) * letters.length / n));
-        const [c, g] = blank(); drawChars(g, letters.slice(0, k));
-        frames.push({ name: `text ${i + 1}: ${k} letters`, src: c });
-      }
-    } else {
-      const [src, sg] = blank(); drawChars(sg, chars);
-      const deg = T.angle >= 360 ? null : T.angle;
-      const angleOf = i => deg === null ? i * Math.PI * 2 / n : (-deg / 2 + i * deg / (n - 1)) * Math.PI / 180;
-      const Fp = T.persp > 0 ? TS * 0.9 / (T.persp / 100) : Infinity, mid = TS / 2;
-      for (let i = 0; i < n; i++) {
-        const th = angleOf(i), cos = Math.cos(th), sin = Math.sin(th);
-        const [c, g] = blank();
-        if (T.anim === 'rz') {
-          g.translate(mid, mid); g.rotate(th); g.drawImage(src, -mid, -mid);
-        } else {
-          // 3D turn drawn in 1 px slices: each column (Y) or row (X) gets its own perspective scale
-          const proj = d => { const s = isFinite(Fp) ? Fp / (Fp + d * sin) : 1; return [mid + d * cos * s, s]; };
-          for (let u = 0; u < TS; u++) {
-            const [a, s] = proj(u - mid), [b] = proj(u + 1 - mid);
-            const lo = Math.min(a, b), len = Math.abs(b - a) + 0.6;
-            if (T.anim === 'ry') g.drawImage(src, u, 0, 1, TS, lo, mid - mid * s, len, TS * s);
-            else g.drawImage(src, 0, u, TS, 1, mid - mid * s, lo, TS * s, len);
-          }
-        }
-        frames.push({ name: `text ${i + 1}: ${Math.round(th * 180 / Math.PI)}°`, src: c });
-      }
-    }
-    S.frames = frames;
-    changed();
-  }
-
-  // ---------- GIF: decode every frame, then sample N of them ----------
-  const setGifStatus = (msg, isError = false) => {
-    const el = $('gifStatus'); el.textContent = msg; el.classList.toggle('error', isError);
-  };
-
-  function decodeGif(bytes, name) {
-    if (typeof GifReader === 'undefined') throw new Error('The GIF reader did not load: check your connection and reload the page.');
-    if (String.fromCharCode(...bytes.subarray(0, 4)) !== 'GIF8') throw new Error('This file is not a GIF. If the link points to a video or a web page, use the direct link to the .gif file.');
-    const r = new GifReader(bytes), W = r.width, H = r.height;
-    const total = Math.min(r.numFrames(), 300);
-    const pixels = new Uint8ClampedArray(W * H * 4);
-    const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
-    const tg = tmp.getContext('2d');
-    const frames = [];
-    for (let i = 0; i < total; i++) {
-      const info = r.frameInfo(i);
-      const saved = info.disposal === 3 ? pixels.slice() : null;
-      r.decodeAndBlitFrameRGBA(i, pixels);
-      // flatten onto white, since transparent areas print as paper
-      tg.putImageData(new ImageData(pixels.slice(), W, H), 0, 0);
-      const c = document.createElement('canvas'); c.width = W; c.height = H;
-      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(tmp, 0, 0);
-      frames.push(c);
-      // GIF disposal: 2 clears the frame's area, 3 restores what was there before it
-      if (info.disposal === 2) {
-        for (let y = info.y; y < info.y + info.height; y++) pixels.fill(0, (y * W + info.x) * 4, (y * W + info.x + info.width) * 4);
-      } else if (saved) pixels.set(saved);
-    }
-    return { name, bytes, frames, W, H, total: r.numFrames() };
-  }
-
-  function useGif(gif) {
-    S.gif = gif;
-    S.gifStart = 1; S.gifEnd = gif.frames.length;
-    S.gifN = Math.min(6, gif.frames.length);
-    gifUi();
-    sampleGif();
-  }
-
-  // GIF controls reflect S.gif and the chosen range (also used when a saved session is restored)
-  function gifUi() {
-    const g = S.gif, len = g.frames.length;
-    S.gifEnd = Math.min(S.gifEnd, len); S.gifStart = Math.min(S.gifStart, S.gifEnd - 1);
-    $('gifStart').max = $('gifEnd').max = len;
-    $('gifStart').value = S.gifStart; $('gifEnd').value = S.gifEnd;
-    $('gifN').max = Math.max(2, Math.min(S.gifEnd - S.gifStart + 1, 24)); $('gifN').value = S.gifN; $('gifNVal').textContent = S.gifN;
-    $('gifCtrl').hidden = false;
-    const cut = g.total > len ? ` (first ${len} used)` : '';
-    setGifStatus(`${g.name}: ${g.total} frame${cut}, ${g.W}×${g.H} px.`);
-  }
-
-  // evenly spaced frames from the chosen range; the step skips the range end so the loop closes cleanly
-  function sampleGif() {
-    const g = S.gif; if (!g) return;
-    const span = S.gifEnd - S.gifStart + 1;
-    const n = Math.max(2, Math.min(S.gifN, span));
-    $('gifN').max = Math.max(2, Math.min(span, 24)); $('gifN').value = n; $('gifNVal').textContent = n;
-    S.frames = [...Array(n).keys()].map(i => {
-      const k = S.gifStart - 1 + Math.floor(i * span / n);
-      return { name: `frame ${k + 1} of ${g.total}`, src: g.frames[k] };
-    });
-    changed();
-  }
-
-  // a Giphy page link becomes the direct link to its .gif
-  function directGifUrl(raw) {
-    const u = raw.trim();
-    const m = u.match(/giphy\.com\/(?:gifs|stickers|embed)\/(?:[\w-]*-)?([A-Za-z0-9]+)\/?(?:[?#].*)?$/);
-    return m ? `https://i.giphy.com/${m[1]}.gif` : u;
-  }
-
-  async function loadGifUrl(raw) {
-    const url = directGifUrl(raw);
-    if (!/^https?:\/\//i.test(url)) { setGifStatus('Enter a link starting with https://', true); return; }
-    setGifStatus('Downloading the GIF…');
-    let buf;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`the site answered with error ${res.status}`);
-      buf = new Uint8Array(await res.arrayBuffer());
-    } catch (err) {
-      setGifStatus(`Can't download the GIF from this link (${err.message || 'link blocked'}). Many sites don't allow downloads from other pages: save the GIF to your computer and load it as a file.`, true);
-      return;
-    }
-    try { useGif(decodeGif(buf, url.split('/').pop().split('?')[0] || 'GIF')); }
-    catch (err) { setGifStatus(err.message, true); }
-  }
-
-  async function loadGifFile(file) {
-    setGifStatus('Reading the GIF…');
-    try { useGif(decodeGif(new Uint8Array(await file.arrayBuffer()), file.name)); }
-    catch (err) { setGifStatus(err.message, true); }
-  }
-
-  async function addFiles(files) {
-    const gif = [...files].find(f => f.type === 'image/gif');
-    if (gif && files.length === 1) { setSource('gif'); loadGifFile(gif); return; }
-    const imgs = [...files].filter(f => f.type.startsWith('image/'))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    if (!imgs.length) return;
-    const loaded = [];
-    for (const f of imgs) {
-      try {
-        const bmp = await createImageBitmap(f);
-        const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
-        c.getContext('2d').drawImage(bmp, 0, 0);
-        loaded.push({ name: f.name, src: c });
-      } catch { /* unreadable image: skip it */ }
-    }
-    S.frames.push(...loaded);
-    changed();
-  }
-
-  // ---------- Drawing helpers ----------
-  function drawContain(g, src, W, H, scale = 1) {
-    const s = Math.min(W / src.width, H / src.height) * scale;
-    const w = src.width * s, h = src.height * s;
-    g.drawImage(src, (W - w) / 2, (H - h) / 2, w, h);
-  }
-
-  // ---------- Build the interlaced base image and the barrier grid ----------
-  function rebuild() {
-    const N = count(), W = S.outW, H = S.outH, w = S.w, P = N * w;
-    baseCv.width = W; baseCv.height = H;
-    view.width = W; view.height = H;
-    updateSpec();
-    if (N < 2) { gridCv.width = gridCv.height = 1; return; }
-
-    const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
-    const tg = tmp.getContext('2d', { willReadFrequently: true });
-    const soft = document.createElement('canvas'); soft.width = W; soft.height = H;
-    const sg = soft.getContext('2d', { willReadFrequently: true });
-    const fr = parseInt(S.fill.slice(1, 3), 16), fgc = parseInt(S.fill.slice(3, 5), 16), fb = parseInt(S.fill.slice(5, 7), 16);
-    const unique = S.frames.map(f => {
-      tg.fillStyle = '#fff'; tg.fillRect(0, 0, W, H);
-      drawContain(tg, f.src, W, H, S.figScale);
-      const img = tg.getImageData(0, 0, W, H), d = img.data;
-      const step = 255 / (S.levels - 1), q = v => Math.round(v / step) * step;
-      for (let p = 0; p < d.length; p += 4) {
-        if (S.mode === 'sil') {
-          // ink where the pixel is darker than the threshold (or lighter, when inverted)
-          const ink = (0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2] < S.thresh) !== S.invert;
-          if (ink) { d[p] = fr; d[p + 1] = fgc; d[p + 2] = fb; } else d[p] = d[p + 1] = d[p + 2] = 255;
-          continue;
-        }
-        if (S.mode === 'post') {
-          if (S.gray) d[p] = d[p + 1] = d[p + 2] = q(0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2]);
-          else { d[p] = q(d[p]); d[p + 1] = q(d[p + 1]); d[p + 2] = q(d[p + 2]); }
-        }
-        if (S.invert) { d[p] = 255 - d[p]; d[p + 1] = 255 - d[p + 1]; d[p + 2] = 255 - d[p + 2]; }
-      }
-      if (!S.blur) return d;
-      tg.putImageData(img, 0, 0);
-      sg.filter = 'none'; sg.fillStyle = '#fff'; sg.fillRect(0, 0, W, H);
-      sg.filter = `blur(${S.blur}px)`; sg.drawImage(tmp, 0, 0); sg.filter = 'none';
-      return sg.getImageData(0, 0, W, H).data;
-    });
-    const datas = order().map(i => unique[i]);
-
-    // linear: pixel at column x (or row y) comes from frame floor(x / w) mod N
-    // radial: pixel at angle θ around the centre comes from frame floor(θ / alpha) mod N
-    const bg = baseCv.getContext('2d');
-    const out = bg.createImageData(W, H), o = out.data;
-    const alpha = alphaOf(), cx = W / 2, cy = H / 2, TAU = Math.PI * 2;
-    for (let y = 0; y < H; y++) {
-      const rowIdx = Math.floor(y / w) % N;
-      for (let x = 0; x < W; x++) {
-        let fi;
-        if (S.radial) {
-          let t = Math.atan2(y + 0.5 - cy, x + 0.5 - cx); if (t < 0) t += TAU;
-          fi = Math.floor(t / alpha) % N;
-        } else fi = S.vertical ? Math.floor(x / w) % N : rowIdx;
-        const p = (y * W + x) * 4, src = datas[fi];
-        o[p] = src[p]; o[p + 1] = src[p + 1]; o[p + 2] = src[p + 2]; o[p + 3] = 255;
-      }
-    }
-    bg.putImageData(out, 0, 0);
-
-    if (S.radial) {
-      // square grid as large as the diagonal, so it covers the image at any rotation
-      const D = diag(); gridCv.width = gridCv.height = D;
-      makeRadialGrid(gridCv.getContext('2d'), D, D, D / 2, D / 2, D / 2);
-      return;
-    }
-    // grid is one period longer than the image, so it can slide and wrap seamlessly
-    gridCv.width = S.vertical ? W + P : W;
-    gridCv.height = S.vertical ? H : H + P;
-    makeGrid(gridCv.getContext('2d'), gridCv.width, gridCv.height);
-  }
-
-  function makeRadialGrid(g, GW, GH, cx, cy, R) {
-    const N = count(), alpha = alphaOf();
-    g.clearRect(0, 0, GW, GH);
-    g.fillStyle = '#000'; g.fillRect(0, 0, GW, GH);
-    g.globalCompositeOperation = 'destination-out';
-    const sa = alpha * S.aperture, pad = (alpha - sa) / 2;
-    for (let k = 0; k < S.rays; k++) {
-      const a = k * N * alpha + pad;
-      g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, a, a + sa); g.closePath(); g.fill();
-    }
-    g.globalCompositeOperation = 'source-over';
-  }
-
-  function makeGrid(g, GW, GH) {
-    const N = count(), w = S.w, P = N * w;
-    g.clearRect(0, 0, GW, GH);
-    g.fillStyle = '#000'; g.fillRect(0, 0, GW, GH);
-    // the slit is centred on its strip, so changing the aperture never shifts the frame it shows
-    const len = S.vertical ? GW : GH, sw = w * S.aperture, pad = (w - sw) / 2;
-    for (let k = -P; k < len + P; k += P) {
-      if (S.vertical) g.clearRect(k + pad, 0, sw, GH); else g.clearRect(0, k + pad, GW, sw);
-    }
-  }
-
-  // ---------- Render loop ----------
-  let last = performance.now();
-  function tick(now) {
-    const dt = Math.min(0.1, (now - last) / 1000); last = now;
-    const N = count(), P = N * S.w;
-    if (S.playing && !dragging && N >= 2) {
-      if (S.radial) S.angle += S.rspeed * Math.PI / 180 * dt; else S.offset += S.speed * dt;
-    }
-    vctx.fillStyle = '#fff'; vctx.fillRect(0, 0, view.width, view.height);
-    if (N < 2) {
-      vctx.fillStyle = '#000'; vctx.font = `${Math.round(Math.min(view.width, view.height) / 28)}px Roboto, Arial, sans-serif`; vctx.textAlign = 'center';
-      vctx.fillText(S.frames.length ? 'At least 2 frames are needed' : 'Load images, a GIF or type some text', view.width / 2, view.height / 2);
-      $('readout').textContent = '';
-    } else if (S.radial) {
-      vctx.drawImage(baseCv, 0, 0);
-      const alpha = alphaOf(), per = N * alpha;
-      const m = ((S.angle % per) + per) % per;
-      if (S.showGrid) {
-        vctx.save();
-        vctx.translate(view.width / 2, view.height / 2); vctx.rotate(m);
-        vctx.drawImage(gridCv, -gridCv.width / 2, -gridCv.height / 2);
-        vctx.restore();
-      }
-      const cur = Math.floor(m / alpha + 1e-9) % N, deg = r => (r * 180 / Math.PI).toFixed(2);
-      $('readout').innerHTML = `Visible frame <b>${cur + 1}</b> / ${N} · grid rotation <b>${deg(m)}°</b> over a period of ${deg(per)}°`;
-    } else {
-      vctx.drawImage(baseCv, 0, 0);
-      const m = ((S.offset % P) + P) % P;
-      if (S.showGrid) {
-        if (S.vertical) vctx.drawImage(gridCv, m - P, 0); else vctx.drawImage(gridCv, 0, m - P);
-      }
-      const cur = Math.floor(m / S.w) % N;
-      $('readout').innerHTML = `Visible frame <b>${cur + 1}</b> / ${N} · grid offset <b>${m.toFixed(1).padStart(5, ' ')}</b> px over a period of ${P} px`;
-    }
-    requestAnimationFrame(tick);
-  }
-
-  // drag the grid with pointer
-  let dragging = false, dragStart = 0, offStart = 0;
-  const pointerAngle = e => {
-    const r = view.getBoundingClientRect();
-    return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
-  };
-  view.addEventListener('pointerdown', e => {
-    dragging = true; view.setPointerCapture(e.pointerId);
-    if (S.radial) { dragStart = pointerAngle(e); offStart = S.angle; return; }
-    dragStart = S.vertical ? e.clientX : e.clientY; offStart = S.offset;
-  });
-  view.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    if (S.radial) { S.angle = offStart + pointerAngle(e) - dragStart; return; }
-    const r = view.getBoundingClientRect();
-    const scale = S.vertical ? view.width / r.width : view.height / r.height;
-    S.offset = offStart + ((S.vertical ? e.clientX : e.clientY) - dragStart) * scale;
-  });
-  const endDrag = () => { dragging = false; };
-  view.addEventListener('pointerup', endDrag); view.addEventListener('pointercancel', endDrag);
-
-  // ---------- Print spec ----------
-  function updateSpec() {
-    syncAperture();
-    const N = count(), mm = pxToMm, n0 = S.frames.length;
-    const P = N * S.w;
-    const framesTxt = N === n0 ? `${N}` : `${N} in the loop (${n0} loaded, back and forth)`;
-    // share of the image that shows through the grid, and how many frames mix in each slit
-    const lum = n => {
-      const pct = Math.min(100, S.aperture / Math.max(n, 1) * 100);
-      return `${pct.toFixed(0)}% of the image visible${S.aperture > 1 ? ' · frames overlap' : ''}`;
-    };
-    if (S.radial) {
-      const alpha = Math.PI * 2 / (S.rays * Math.max(N, 1)), deg = alpha * 180 / Math.PI;
-      const rEdge = Math.min(S.outW, S.outH) / 2;
-      $('spec').innerHTML = `
-        <dt>Frames</dt><dd>${framesTxt}</dd>
-        <dt>Rays</dt><dd>${S.rays}</dd>
-        <dt>Wedge</dt><dd>${deg.toFixed(3)}°</dd>
-        <dt>Slit</dt><dd>${(deg * S.aperture).toFixed(3)}°</dd>
-        <dt>Period</dt><dd>${(deg * N).toFixed(3)}°</dd>
-        <dt>At the edge</dt><dd>${mm(rEdge * alpha * S.aperture).toFixed(2)} mm slit</dd>
-        <dt>At half radius</dt><dd>${mm(rEdge / 2 * alpha * S.aperture).toFixed(2)} mm slit</dd>
-        <dt>Brightness</dt><dd>${lum(N)}</dd>
-        <dt>Format</dt><dd>${(mm(S.outW) / 10).toFixed(1)} × ${(mm(S.outH) / 10).toFixed(1)} cm</dd>`;
-      return;
-    }
-    $('spec').innerHTML = `
-      <dt>Frames</dt><dd>${framesTxt}</dd>
-      <dt>Strip</dt><dd>${S.w} px = ${mm(S.w).toFixed(2)} mm</dd>
-      <dt>Slit</dt><dd>${+(S.w * S.aperture).toFixed(2)} px = ${mm(S.w * S.aperture).toFixed(2)} mm</dd>
-      <dt>Black bar</dt><dd>${+Math.max(0, P - S.w * S.aperture).toFixed(2)} px = ${mm(Math.max(0, P - S.w * S.aperture)).toFixed(2)} mm</dd>
-      <dt>Period</dt><dd>${P} px = ${mm(P).toFixed(2)} mm</dd>
-      <dt>Brightness</dt><dd>${lum(N)}</dd>
-      <dt>Format</dt><dd>${(mm(S.outW) / 10).toFixed(1)} × ${(mm(S.outH) / 10).toFixed(1)} cm</dd>`;
-  }
-
-  // ---------- Export ----------
-  // PNG stores print resolution in a pHYs chunk (pixels per metre), inserted right after IHDR
-  const CRC = (() => {
-    const t = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
-    return t;
-  })();
-  const crc32 = bytes => { let c = 0xFFFFFFFF; for (const b of bytes) c = CRC[(c ^ b) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
-  async function withDpi(blob, dpi) {
-    const src = new Uint8Array(await blob.arrayBuffer());
-    const ppm = Math.round(dpi / 0.0254);
-    const chunk = new Uint8Array(21), dv = new DataView(chunk.buffer);
-    dv.setUint32(0, 9);
-    chunk.set([0x70, 0x48, 0x59, 0x73], 4); // "pHYs"
-    dv.setUint32(8, ppm); dv.setUint32(12, ppm); chunk[16] = 1; // unit: metre
-    dv.setUint32(17, crc32(chunk.subarray(4, 17)));
-    const at = 33; // 8-byte signature + 25-byte IHDR chunk
-    const out = new Uint8Array(src.length + chunk.length);
-    out.set(src.subarray(0, at)); out.set(chunk, at); out.set(src.subarray(at), at + chunk.length);
-    return new Blob([out], { type: 'image/png' });
-  }
-
-  // the viewer's save dialog when the page runs inside claude.ai, a plain download link otherwise
-  let dl = null;
-  try { window.claude?.use?.('downloads')?.then(d => { dl = d; }).catch(() => {}); } catch { /* not in a viewer */ }
-  async function deliver(blob, filename) {
-    if (dl) {
-      try { await dl.save({ filename, data: blob }); return 'saved'; }
-      catch (e) { if (e?.code === 'declined' || e?.code === 'rate_limited') return 'declined'; }
-    }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    return 'link';
-  }
-
-  function save(canvas, filename, caption) {
-    canvas.toBlob(async raw => {
-      const blob = await withDpi(raw, S.dpi);
-      const how = await deliver(blob, filename);
-      // inside a sandboxed frame a plain link may do nothing: show the image so it can be saved by hand
-      if (how !== 'link' || window.top === window) return;
-      const url = URL.createObjectURL(blob);
-      const box = $('exports'); box.hidden = false;
-      let fig = box.querySelector(`[data-f="${filename}"]`);
-      if (!fig) { fig = document.createElement('figure'); fig.dataset.f = filename; box.appendChild(fig); }
-      if (fig.dataset.url) URL.revokeObjectURL(fig.dataset.url);
-      fig.dataset.url = url;
-      fig.innerHTML = `<div class="fig-head"><span>${caption}</span><button type="button" class="fig-close" aria-label="Close the ${caption} preview">✕ Close</button></div>
-        <img alt="${caption}" src="${url}"><figcaption>If the download doesn't start, right-click (or long-press) the image to save it.</figcaption>`;
-      fig.querySelector('.fig-close').onclick = () => {
-        URL.revokeObjectURL(fig.dataset.url);
-        fig.remove();
-        box.hidden = !box.children.length;
-      };
-    }, 'image/png');
-  }
-  const sizeTag = () => `${pxToMm(S.outW).toFixed(0)}x${pxToMm(S.outH).toFixed(0)}mm-${S.dpi}dpi`;
-
-  // settings printed above the image, so a sheet can be matched to its configuration later
-  function infoSegments() {
-    const mm = px => pxToMm(px).toFixed(2);
-    const seg = [`Size ${pxToMm(S.outW).toFixed(1)} × ${pxToMm(S.outH).toFixed(1)} mm`];
-    if (S.radial) {
-      // wedges widen outwards, so quote them at the edge of the circle
-      const strip = Math.min(S.outW, S.outH) / 2 * alphaOf();
-      seg.push(`Strip ${mm(strip)} mm at edge`, `Aperture ${mm(strip * S.aperture)} mm at edge`);
-    } else {
-      seg.push(`Strip ${mm(S.w)} mm`, `Aperture ${mm(S.w * S.aperture)} mm`);
-    }
-    seg.push(`${count()}F`);
-    return seg;
-  }
-
-  function withInfo(canvas, label, transparent) {
-    if (!$('infoBand').checked) return canvas;
-    const W = canvas.width;
-    const fs = Math.max(10, Math.round(1.8 / 25.4 * S.dpi)); // about 1.8 mm tall text once printed
-    const pad = Math.round(fs * 0.7), lh = Math.round(fs * 1.35), sep = '   ·   ';
-    const m = document.createElement('canvas').getContext('2d');
-    const font = w => `${w} ${fs}px Roboto, Arial, sans-serif`;
-    m.font = font(500);
-    // wrap segments greedily; base and grid share the same text, so their bands match in height
-    const [first, ...rest] = infoSegments(), lines = [];
-    let cur = first;
-    for (const s of rest) {
-      if (m.measureText(cur + sep + s).width <= W - pad * 2) cur += sep + s;
-      else { lines.push(cur); cur = s; }
-    }
-    lines.push(cur);
-    const band = pad * 2 + lh * lines.length;
-
-    const out = document.createElement('canvas'); out.width = W; out.height = canvas.height + band;
-    const g = out.getContext('2d');
-    if (!transparent) { g.fillStyle = '#fff'; g.fillRect(0, 0, W, out.height); }
-    g.fillStyle = '#000'; g.textBaseline = 'top';
-    g.font = font(500);
-    lines.forEach((l, i) => g.fillText(l, pad, pad + i * lh, W - pad * 2));
-    g.drawImage(canvas, 0, band);
-    return out;
-  }
-
-  $('saveBase').onclick = () => { if (S.frames.length >= 2) save(withInfo(baseCv, 'BASE', false), `scanimation-base-${sizeTag()}.png`, 'Base image'); };
-  $('saveGrid').onclick = () => {
-    if (S.frames.length < 2) return;
-    const c = gridCanvas();
-    save(withInfo(c, 'GRID', true), `scanimation-grid-${sizeTag()}.png`, 'Grid');
-  };
-
-  // ---------- Controls ----------
-  let deb;
-  const later = () => { clearTimeout(deb); deb = setTimeout(rebuild, 120); };
-  function seg(onBtn, offBtn) { onBtn.setAttribute('aria-pressed', 'true'); offBtn.setAttribute('aria-pressed', 'false'); }
-
-  const syncSlit = () => { $('slitVal').textContent = `${S.w} px ≈ ${pxToMm(S.w).toFixed(2)} mm`; };
-  $('slit').oninput = e => { S.w = +e.target.value; syncSlit(); syncAperture(); later(); };
-  $('loopOn').onclick = () => { S.loop = true; seg($('loopOn'), $('loopOff')); rebuild(); };
-  $('loopOff').onclick = () => { S.loop = false; seg($('loopOff'), $('loopOn')); rebuild(); };
-  function setMotion(mode) {
-    S.radial = mode === 'r'; if (!S.radial) S.vertical = mode === 'v';
-    [['oriV', 'v'], ['oriH', 'h'], ['oriR', 'r']].forEach(([id, m]) => $(id).setAttribute('aria-pressed', String(m === mode)));
-    $('stage').classList.toggle('horiz', mode === 'h');
-    $('stage').classList.toggle('radial', mode === 'r');
-    $('slitField').hidden = S.radial;
-    $('raysField').hidden = $('radialNote').hidden = !S.radial;
-    syncSpeed();
-    rebuild();
-  }
-  function syncSpeed() {
-    const sp = $('speed');
-    if (S.radial) { sp.min = 1; sp.max = 60; sp.value = S.rspeed; $('speedVal').textContent = `${S.rspeed} °/s`; }
-    else { sp.min = 2; sp.max = 200; sp.value = S.speed; $('speedVal').textContent = `${S.speed} px/s`; }
-  }
-  $('oriV').onclick = () => setMotion('v');
-  $('oriH').onclick = () => setMotion('h');
-  $('oriR').onclick = () => setMotion('r');
-  // the circular slit widens outwards, so its width is quoted at the edge of the circle
-  function syncAperture() {
-    const pct = Math.round(S.aperture * 100), n = Math.max(count(), 1);
-    const px = S.radial ? Math.min(S.outW, S.outH) / 2 * (Math.PI * 2 / (S.rays * n)) * S.aperture : S.w * S.aperture;
-    $('apertureVal').textContent = `${pct}% ≈ ${pxToMm(px).toFixed(2)} mm${S.radial ? ' at edge' : ''}`;
-  }
-  $('aperture').oninput = e => { S.aperture = +e.target.value / 100; syncAperture(); later(); };
-  // grid defaults: vertical lines, 2 px strips, 48 rays, 75% aperture, continuous loop
-  $('gridReset').onclick = () => {
-    S.w = 2; S.rays = 48; S.aperture = 0.75; S.loop = true;
-    $('slit').value = S.w; syncSlit();
-    $('rays').value = S.rays; $('raysVal').textContent = S.rays;
-    $('aperture').value = 75;
-    seg($('loopOn'), $('loopOff'));
-    setMotion('v');
-  };
-  $('rays').oninput = e => { S.rays = +e.target.value; $('raysVal').textContent = S.rays; later(); };
-  const clampSize = v => Math.max(100, Math.min(5000, Math.round(+v || 0)));
-  const mmToPx = v => (+v || 0) / 25.4 * S.dpi;
-  function setDims(wpx, hpx) {
-    S.outW = clampSize(wpx); S.outH = clampSize(hpx);
-    $('wPx').value = S.outW; $('wMm').value = pxToMm(S.outW).toFixed(2);
-    $('hPx').value = S.outH; $('hMm').value = pxToMm(S.outH).toFixed(2);
-    syncSlit();
-    if ($('zoom').value !== 'fit') view.style.width = `${S.outW * +$('zoom').value}px`;
-    rebuild();
-  }
-  // with a fixed ratio, the side just edited drives the other one
-  const fromWidth = wpx => setDims(wpx, S.ratio ? wpx / S.ratio : S.outH);
-  const fromHeight = hpx => setDims(S.ratio ? hpx * S.ratio : S.outW, hpx);
-  $('wPx').onchange = e => { S.lockMm = false; fromWidth(e.target.value); };
-  $('hPx').onchange = e => { S.lockMm = false; fromHeight(e.target.value); };
-  $('wMm').onchange = e => { S.lockMm = true; fromWidth(mmToPx(e.target.value)); };
-  $('hMm').onchange = e => { S.lockMm = true; fromHeight(mmToPx(e.target.value)); };
-  $('ratio').onchange = e => { S.ratio = e.target.value === 'free' ? 0 : +e.target.value; if (S.ratio) fromWidth(S.outW); };
-  $('dpi').onchange = e => {
-    const wMm = +$('wMm').value, hMm = +$('hMm').value;
-    S.dpi = +e.target.value;
-    if (S.lockMm) setDims(mmToPx(wMm), mmToPx(hMm)); else setDims(S.outW, S.outH);
-  };
-  $('figScale').oninput = e => { S.figScale = +e.target.value / 100; $('figScaleVal').textContent = `${e.target.value}%`; later(); };
-  $('fill').oninput = e => { S.fill = e.target.value; $('fillVal').textContent = S.fill; later(); };
-  $('blur').oninput = e => { S.blur = +e.target.value; $('blurVal').textContent = `${S.blur} px`; later(); };
-  function setMode(m) {
-    S.mode = m;
-    [['modeSil', 'sil'], ['modePost', 'post'], ['modeOrig', 'orig']].forEach(([id, v]) => $(id).setAttribute('aria-pressed', String(v === m)));
-    $('threshField').hidden = $('fillField').hidden = m !== 'sil';
-    $('postField').hidden = m !== 'post';
-    rebuild();
-  }
-  $('modeSil').onclick = () => setMode('sil');
-  $('modePost').onclick = () => setMode('post');
-  $('modeOrig').onclick = () => setMode('orig');
-  $('levels').oninput = e => { S.levels = +e.target.value; $('levelsVal').textContent = S.levels; later(); };
-  $('gray').onchange = e => { S.gray = e.target.checked; rebuild(); };
-  $('thresh').oninput = e => { S.thresh = +e.target.value; $('threshVal').textContent = S.thresh; later(); };
-  $('invert').onchange = e => { S.invert = e.target.checked; rebuild(); };
-
-  const syncPlay = () => { $('playBtn').textContent = S.playing ? 'Pause' : 'Play'; };
-  $('playBtn').onclick = () => { S.playing = !S.playing; syncPlay(); };
-  $('stepBtn').onclick = () => {
-    S.playing = false; syncPlay();
-    if (S.radial) { const a = alphaOf(); S.angle = (Math.floor(S.angle / a + 1e-6) + 1) * a; }
-    else S.offset = (Math.floor(S.offset / S.w + 1e-6) + 1) * S.w;
-  };
-  $('speed').oninput = e => { if (S.radial) S.rspeed = +e.target.value; else S.speed = +e.target.value; syncSpeed(); };
-  $('viewGrid').onclick = () => { S.showGrid = true; seg($('viewGrid'), $('viewBase')); };
-  $('viewBase').onclick = () => { S.showGrid = false; seg($('viewBase'), $('viewGrid')); };
-  $('zoom').onchange = e => {
-    const z = e.target.value, st = $('stage');
-    st.classList.toggle('fit', z === 'fit');
-    view.style.width = z === 'fit' ? '' : `${S.outW * +z}px`;
-    view.style.imageRendering = z === 'fit' ? '' : 'pixelated';
-  };
-
-  function setSource(src, generate = true) {
-    S.source = src;
-    [['srcImg', 'img'], ['srcGif', 'gif'], ['srcTxt', 'txt']].forEach(([id, v]) => $(id).setAttribute('aria-pressed', String(v === src)));
-    $('drop').hidden = src !== 'img';
-    $('gifBox').hidden = src !== 'gif';
-    $('textBox').hidden = src !== 'txt';
-    if (src === 'txt' && generate) makeTextFrames();
-  }
-  $('srcImg').onclick = () => setSource('img');
-  $('srcGif').onclick = () => setSource('gif');
-  $('srcTxt').onclick = () => setSource('txt');
-
-  // ---------- Text source ----------
-  const syncText = () => {
-    const rot = S.text.anim[0] === 'r' && S.text.anim.length === 2;
-    $('txtAngleField').hidden = $('txtNote').hidden = !rot;
-    $('txtPerspField').hidden = !(S.text.anim === 'rx' || S.text.anim === 'ry');
-  };
-  let tdeb;
-  const textLater = () => { clearTimeout(tdeb); tdeb = setTimeout(makeTextFrames, 150); };
-  $('txt').oninput = e => { S.text.str = e.target.value; textLater(); };
-  $('txtFont').onchange = e => { S.text.font = +e.target.value; makeTextFrames(); };
-  $('txtAnim').onchange = e => { S.text.anim = e.target.value; syncText(); makeTextFrames(); };
-  $('txtAngle').oninput = e => { S.text.angle = +e.target.value; $('txtAngleVal').textContent = `${S.text.angle}°`; textLater(); };
-  $('txtPersp').oninput = e => { S.text.persp = +e.target.value; $('txtPerspVal').textContent = `${S.text.persp}%`; textLater(); };
-  $('txtN').oninput = e => { S.text.n = +e.target.value; $('txtNVal').textContent = S.text.n; textLater(); };
-  syncText();
-  $('gifForm').addEventListener('submit', e => { e.preventDefault(); loadGifUrl($('gifUrl').value); });
-  $('gifFile').onchange = e => { if (e.target.files[0]) loadGifFile(e.target.files[0]); e.target.value = ''; };
-  const gifDrop = $('gifDrop');
-  ['dragenter', 'dragover'].forEach(t => gifDrop.addEventListener(t, e => { e.preventDefault(); gifDrop.classList.add('over'); }));
-  ['dragleave', 'drop'].forEach(t => gifDrop.addEventListener(t, e => { e.preventDefault(); gifDrop.classList.remove('over'); }));
-  gifDrop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) loadGifFile(f); });
-  $('gifN').oninput = e => { S.gifN = +e.target.value; $('gifNVal').textContent = S.gifN; clearTimeout(deb); deb = setTimeout(sampleGif, 120); };
-  const clampRange = () => {
-    const max = S.gif ? S.gif.frames.length : 1;
-    S.gifStart = Math.max(1, Math.min(max - 1, Math.round(+$('gifStart').value || 1)));
-    S.gifEnd = Math.max(S.gifStart + 1, Math.min(max, Math.round(+$('gifEnd').value || max)));
-    $('gifStart').value = S.gifStart; $('gifEnd').value = S.gifEnd;
-    sampleGif();
-  };
-  $('gifStart').onchange = clampRange;
-  $('gifEnd').onchange = clampRange;
-
-  $('reverseBtn').onclick = () => { S.frames.reverse(); changed(); };
-  // two-step delete: the first click arms the button, a second click within 3 s clears the frames
-  let clearArmed = null;
-  $('clearBtn').onclick = () => {
-    const b = $('clearBtn');
-    if (!clearArmed) {
-      b.textContent = 'Click again to delete'; b.classList.add('primary');
-      clearArmed = setTimeout(() => { clearArmed = null; b.textContent = 'Delete all frames'; b.classList.remove('primary'); }, 3000);
-      return;
-    }
-    clearTimeout(clearArmed); clearArmed = null;
-    b.textContent = 'Delete all frames'; b.classList.remove('primary');
-    S.frames = []; S.offset = 0; S.angle = 0;
-    changed();
-  };
-  $('fileIn').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
-  const drop = $('drop');
-  ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
-  ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
-
-  // ---------- Saved animations, kept in this browser (IndexedDB) ----------
-  const store = (() => {
-    let dbp = null;
-    const open = () => dbp || (dbp = new Promise((res, rej) => {
-      const r = indexedDB.open('kinegram-studio', 2);
-      r.onupgradeneeded = () => {
-        const db = r.result;
-        if (!db.objectStoreNames.contains('anims')) db.createObjectStore('anims', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('session')) db.createObjectStore('session');
-      };
-      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-    }));
-    const run = async (mode, fn, name = 'anims') => {
-      const db = await open();
-      return new Promise((res, rej) => {
-        const t = db.transaction(name, mode), req = fn(t.objectStore(name));
-        t.oncomplete = () => res(req.result); t.onerror = () => rej(t.error);
-      });
-    };
-    return {
-      all: () => run('readonly', s => s.getAll()),
-      put: v => run('readwrite', s => s.put(v)),
-      del: id => run('readwrite', s => s.delete(id)),
-      sessionGet: k => run('readonly', s => s.get(k), 'session'),
-      sessionPut: (k, v) => run('readwrite', s => s.put(v, k), 'session')
-    };
-  })();
-  // record: { id, name, created, wMm, hMm, info, base: Blob, grid: Blob, checked, copies }
-  let saved = [], persistent = true;
-  const thumbs = new Map(), bitmaps = new Map();
-  const persist = rec => store.put(rec).catch(() => { persistent = false; $('storeNote').hidden = false; });
-  const toPng = c => new Promise(r => c.toBlob(r, 'image/png'));
-
-  function gridCanvas() {
-    const c = document.createElement('canvas'); c.width = S.outW; c.height = S.outH;
-    if (S.radial) makeRadialGrid(c.getContext('2d'), S.outW, S.outH, S.outW / 2, S.outH / 2, diag() / 2);
-    else makeGrid(c.getContext('2d'), S.outW, S.outH);
-    return c;
-  }
-
-  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  // deep copy, so later edits to S (e.g. the text object) don't leak into the saved record
-  const snapshot = () => structuredClone(Object.fromEntries(SKEYS.filter(k => !k.startsWith('editing')).map(k => [k, S[k]])));
-  function dropCache(id) {
-    if (thumbs.has(id)) URL.revokeObjectURL(thumbs.get(id));
-    thumbs.delete(id); bitmaps.delete(id + 'base'); bitmaps.delete(id + 'grid');
-  }
-
-  async function saveForPrint(asNew) {
-    if (S.frames.length < 2) { $('saveMsg').textContent = 'At least 2 frames are needed to save.'; return; }
-    const old = !asNew && S.editingId ? saved.find(r => r.id === S.editingId) : null;
-    const name = $('animName').value.trim() || `Animation ${saved.length + 1}`;
-    const frames = [];
-    for (const f of S.frames) frames.push({ name: f.name, blob: f.blob || (f.blob = await toPng(f.src)) });
-    const rec = {
-      id: old ? old.id : newId(), name, created: old ? old.created : Date.now(),
-      wMm: pxToMm(S.outW), hMm: pxToMm(S.outH), info: infoSegments(),
-      base: await toPng(baseCv), grid: await toPng(gridCanvas()),
-      checked: old ? old.checked : true, copies: old ? old.copies : 1,
-      settings: snapshot(), frames, gif: S.gif ? { bytes: S.gif.bytes, name: S.gif.name } : null
-    };
-    if (old) { dropCache(old.id); saved[saved.indexOf(old)] = rec; setEditing(rec); }
-    else { saved.push(rec); setEditing(null); }
-    persist(rec);
-    $('saveMsg').textContent = old
-      ? `Updated "${name}" (${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm).`
-      : `Saved "${name}" (${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm). You'll find it under Print on A4 at the bottom of the page.`;
-    renderPrint();
-  }
-  $('saveAnim').onclick = () => saveForPrint(false);
-  $('saveAsNew').onclick = () => saveForPrint(true);
-
-  function setEditing(rec) {
-    S.editingId = rec ? rec.id : null; S.editingName = rec ? rec.name : '';
-    $('animName').value = S.editingName;
-    syncEditUI();
-    scheduleSave();
-  }
-  function syncEditUI() {
-    const on = !!S.editingId;
-    $('saveAnim').textContent = on ? 'Update' : 'Save for printing';
-    $('saveAsNew').hidden = $('editNote').hidden = !on;
-    $('editName').textContent = `"${S.editingName}"`;
-  }
-  $('stopEdit').onclick = () => { setEditing(null); renderPrint(); };
-
-  // reopen a saved animation in the editor, with its frames and every setting
-  async function editSaved(rec) {
-    await loadState(rec.settings, rec.frames, rec.gif);
-    framesDirty = true;
-    setEditing(rec);
-    $('saveMsg').textContent = '';
-    renderPrint();
-    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
-  }
-
-  function renderPrint() {
-    const ul = $('printList'); ul.innerHTML = '';
-    $('printEmpty').hidden = saved.length > 0;
-    $('storeNote').hidden = persistent;
-    saved.forEach(rec => {
-      if (!thumbs.has(rec.id)) thumbs.set(rec.id, URL.createObjectURL(rec.base));
-      const li = document.createElement('li');
-      li.innerHTML = `<input type="checkbox"><img alt=""><span class="pname"><b></b><small></small></span>
-        <label class="copies">Copies <input type="number" min="1" max="50"></label>
-        <button type="button" class="edit">Edit</button><button type="button" class="del">✕</button>`;
-      li.classList.toggle('editing', rec.id === S.editingId);
-      const edit = li.querySelector('.edit');
-      edit.setAttribute('aria-label', `Edit ${rec.name}`);
-      if (rec.frames?.length) edit.onclick = () => editSaved(rec);
-      else { edit.disabled = true; edit.title = 'Saved with an earlier version: it has no frames, so it can\'t be reopened.'; }
-      const [chk, copies] = li.querySelectorAll('input');
-      chk.checked = rec.checked; chk.setAttribute('aria-label', `Include ${rec.name} in the print`);
-      li.querySelector('img').src = thumbs.get(rec.id);
-      li.querySelector('b').textContent = rec.name;
-      li.querySelector('small').textContent = `${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm`;
-      copies.value = rec.copies;
-      chk.onchange = () => { rec.checked = chk.checked; persist(rec); schedulePreview(); };
-      copies.onchange = () => {
-        rec.copies = Math.max(1, Math.min(50, Math.round(+copies.value || 1))); copies.value = rec.copies;
-        persist(rec); schedulePreview();
-      };
-      const del = li.querySelector('.del');
-      del.setAttribute('aria-label', `Delete ${rec.name}`);
-      del.onclick = () => {
-        saved = saved.filter(r => r !== rec);
-        dropCache(rec.id);
-        if (S.editingId === rec.id) setEditing(null);
-        store.del(rec.id).catch(() => {});
-        renderPrint();
-      };
-      ul.appendChild(li);
-    });
-    schedulePreview();
-  }
-
-  // ---------- A4 layout: shelf packing, tallest pieces first; base and grid sheets share it ----------
-  const MM_PER_PT = 25.4 / 72, INFO_PT = 6, INFO_LH = 2.6, INFO_PAD = 1.2; // info text ≈ 2 mm tall
-  let measureDoc = null;
-  function wrapInfo(rec) {
-    const text = rec.info.join('   ·   ');
-    if (!window.jspdf) return [text];
-    measureDoc = measureDoc || new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    measureDoc.setFont('helvetica', 'normal'); measureDoc.setFontSize(INFO_PT);
-    return measureDoc.splitTextToSize(text, rec.wMm);
-  }
-  const printOpts = () => ({
-    landscape: $('pOrient').value === 'l',
-    margin: Math.max(0, +$('pMargin').value || 0),
-    gap: Math.max(0, +$('pGap').value || 0),
-    info: $('pInfo').checked, outline: $('pOutline').checked
-  });
-
-  function computeLayout() {
-    const P = printOpts(), E = 1e-6;
-    const PW = P.landscape ? 297 : 210, PH = P.landscape ? 210 : 297;
-    const uw = PW - 2 * P.margin, uh = PH - 2 * P.margin;
-    const items = [];
-    saved.filter(r => r.checked).forEach(rec => {
-      const lines = P.info ? wrapInfo(rec) : [];
-      const band = lines.length ? lines.length * INFO_LH + INFO_PAD : 0;
-      for (let c = 0; c < rec.copies; c++) items.push({ rec, lines, band, w: rec.wMm, h: rec.hMm + band });
-    });
-    items.sort((a, b) => b.h - a.h || b.w - a.w);
-    const pages = [], tooBig = [];
-    const place = (pg, sh, it) => { pg.items.push({ ...it, x: P.margin + sh.x, y: P.margin + sh.y }); sh.x += it.w + P.gap; };
-    const newShelf = (pg, it) => { const sh = { y: pg.nextY, h: it.h, x: 0 }; pg.shelves.push(sh); pg.nextY += it.h + P.gap; place(pg, sh, it); };
-    for (const it of items) {
-      if (it.w > uw + E || it.h > uh + E) { tooBig.push(it); continue; }
-      let done = false;
-      for (const pg of pages) {
-        const sh = pg.shelves.find(s => s.x + it.w <= uw + E && it.h <= s.h + E);
-        if (sh) { place(pg, sh, it); done = true; break; }
-        if (pg.nextY + it.h <= uh + E) { newShelf(pg, it); done = true; break; }
-      }
-      if (!done) { const pg = { shelves: [], nextY: 0, items: [] }; pages.push(pg); newShelf(pg, it); }
-    }
-    return { PW, PH, P, pages, tooBig, total: items.length };
-  }
-
-  // ---------- Sheet previews ----------
-  let pdeb, previewJob = 0;
-  const schedulePreview = () => { clearTimeout(pdeb); pdeb = setTimeout(renderPreview, 150); };
-  async function bitmap(rec, kind) {
-    const k = rec.id + kind;
-    if (!bitmaps.has(k)) bitmaps.set(k, await createImageBitmap(rec[kind]));
-    return bitmaps.get(k);
-  }
-  async function drawSheet(L, pg, kind) {
-    const k = 2.4; // preview pixels per mm
-    const c = document.createElement('canvas'); c.width = Math.round(L.PW * k); c.height = Math.round(L.PH * k);
-    const g = c.getContext('2d');
-    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
-    // printable area
-    g.setLineDash([4, 4]); g.strokeStyle = '#c9ced6'; g.lineWidth = 1;
-    g.strokeRect(L.P.margin * k, L.P.margin * k, (L.PW - 2 * L.P.margin) * k, (L.PH - 2 * L.P.margin) * k);
-    g.setLineDash([]);
-    for (const it of pg.items) {
-      const img = await bitmap(it.rec, kind), top = it.y + it.band;
-      g.drawImage(img, it.x * k, top * k, it.w * k, it.rec.hMm * k);
-      if (L.P.outline) { g.strokeStyle = '#969696'; g.strokeRect(it.x * k, top * k, it.w * k, it.rec.hMm * k); }
-      if (it.lines.length) {
-        g.fillStyle = '#000'; g.textBaseline = 'top';
-        g.font = `${INFO_PT * MM_PER_PT * k}px Helvetica, Arial, sans-serif`;
-        it.lines.forEach((l, j) => g.fillText(l, it.x * k, (it.y + j * INFO_LH) * k));
-      }
-    }
-    return c;
-  }
-  async function renderPreview() {
-    const job = ++previewJob, L = computeLayout();
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < L.pages.length; i++) {
-      const pair = document.createElement('div'); pair.className = 'sheet-pair';
-      for (const [kind, label] of [['base', 'images'], ['grid', 'grids (acetate)']]) {
-        const fig = document.createElement('figure');
-        fig.appendChild(await drawSheet(L, L.pages[i], kind));
-        const cap = document.createElement('figcaption');
-        cap.textContent = `Sheet ${i + 1} · ${label}`;
-        fig.appendChild(cap); pair.appendChild(fig);
-      }
-      frag.appendChild(pair);
-    }
-    if (job !== previewJob) return; // a newer change is already being drawn
-    $('sheets').replaceChildren(frag);
-    const msg = $('printMsg');
-    const placed = L.total - L.tooBig.length;
-    let text = placed ? `${placed} ${placed === 1 ? 'piece' : 'pieces'} on ${L.pages.length} ${L.pages.length === 1 ? 'sheet' : 'sheets'} of each kind.` : '';
-    if (L.tooBig.length) {
-      const names = [...new Set(L.tooBig.map(t => t.rec.name))].join(', ');
-      text += ` Doesn't fit on the sheet: ${names}. Reduce the margin or try landscape.`;
-    }
-    msg.textContent = text.trim();
-    msg.classList.toggle('warn', L.tooBig.length > 0);
-    $('pdfBase').disabled = $('pdfGrid').disabled = !L.pages.length;
-  }
-  ['pOrient', 'pMargin', 'pGap', 'pInfo', 'pOutline'].forEach(id => $(id).addEventListener('change', schedulePreview));
-
-  // ---------- PDF: images placed at their real size in millimetres ----------
-  async function buildPdf(kind) {
-    const L = computeLayout();
-    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: L.P.landscape ? 'landscape' : 'portrait', compress: true });
-    const bytes = new Map();
-    for (let i = 0; i < L.pages.length; i++) {
-      if (i) doc.addPage('a4', L.P.landscape ? 'landscape' : 'portrait');
-      for (const it of L.pages[i].items) {
-        if (!bytes.has(it.rec.id)) bytes.set(it.rec.id, new Uint8Array(await it.rec[kind].arrayBuffer()));
-        const top = it.y + it.band;
-        doc.addImage(bytes.get(it.rec.id), 'PNG', it.x, top, it.w, it.rec.hMm, `${kind}-${it.rec.id}`, 'FAST');
-        if (L.P.outline) { doc.setDrawColor(150); doc.setLineWidth(0.1); doc.rect(it.x, top, it.w, it.rec.hMm); }
-        if (it.lines.length) {
-          doc.setFont('helvetica', 'normal'); doc.setFontSize(INFO_PT); doc.setTextColor(0);
-          it.lines.forEach((l, j) => doc.text(l, it.x, it.y + j * INFO_LH, { baseline: 'top' }));
-        }
-      }
-    }
-    return doc.output('blob');
-  }
-  async function exportPdf(kind, btn) {
-    if (!window.jspdf) { $('printMsg').textContent = 'The PDF generator did not load: check your connection and reload the page.'; return; }
-    const label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing the PDF…';
-    try {
-      const blob = await buildPdf(kind);
-      await deliver(blob, kind === 'base' ? 'scanimation-sheets-images.pdf' : 'scanimation-sheets-grids.pdf');
-    } catch (e) {
-      $('printMsg').textContent = `Couldn't create the PDF: ${e.message || e}`;
-    } finally { btn.disabled = false; btn.textContent = label; }
-  }
-  $('pdfBase').onclick = e => exportPdf('base', e.currentTarget);
-  $('pdfGrid').onclick = e => exportPdf('grid', e.currentTarget);
-
-  // animations saved before the frame count was part of the info: measure it from the saved grid.
-  // linear: period / strip width; circular: 2π / (rays × wedge angle), with the wedge from the edge strip
-  async function framesFromGrid(rec) {
-    const img = await createImageBitmap(rec.grid), W = img.width, H = img.height;
-    const c = document.createElement('canvas'); c.width = W; c.height = H;
-    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
-    const d = g.getImageData(0, 0, W, H).data, open = (x, y) => d[(y * W + x) * 4 + 3] < 128;
-    const num = re => { const m = rec.info.join(' ').match(re); return m ? +m[1] : 0; };
-    const pxPerMm = W / rec.wMm;
-    if (/al bordo|at edge/.test(rec.info.join(' '))) {
-      const strip = num(/(?:Striscia|Strip) ([\d.]+) mm/), cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 * 0.9;
-      let rays = 0, prev = null;
-      for (let i = 0; i <= 7200; i++) {
-        const a = i / 7200 * Math.PI * 2, o = open(Math.round(cx + r * Math.cos(a)), Math.round(cy + r * Math.sin(a)));
-        if (prev === false && o) rays++;
-        prev = o;
-      }
-      const alpha = strip / (Math.min(rec.wMm, rec.hMm) / 2);
-      return rays && alpha ? Math.round(Math.PI * 2 / (rays * alpha)) : 0;
-    }
-    const strip = num(/(?:Striscia|Strip) ([\d.]+) mm/) * pxPerMm;
-    const starts = (len, at) => { const s = []; for (let i = 1; i < len; i++) if (!at(i - 1) && at(i)) s.push(i); return s; };
-    let s = starts(W, x => open(x, H >> 1));
-    if (s.length < 2) s = starts(H, y => open(W >> 1, y));
-    if (s.length < 2 || !strip) return 0;
-    const period = (s[s.length - 1] - s[0]) / (s.length - 1);
-    return Math.round(period / strip);
-  }
-
-  (async () => {
-    try { saved = (await store.all()).sort((a, b) => a.created - b.created); }
-    catch { persistent = false; }
-    for (const rec of saved) {
-      if (/^\d+F$/.test(rec.info[rec.info.length - 1] || '')) continue;
-      try { const n = await framesFromGrid(rec); if (n >= 2) { rec.info = [...rec.info, `${n}F`]; persist(rec); } }
-      catch { /* leave this record as it is */ }
-    }
-    renderPrint();
-  })();
-
-  // ---------- Work session: the current animation comes back after a reload ----------
-  const SKEYS = ['w', 'vertical', 'radial', 'rays', 'aperture', 'loop', 'outW', 'outH', 'dpi', 'lockMm', 'ratio', 'figScale',
-    'mode', 'thresh', 'invert', 'fill', 'blur', 'levels', 'gray', 'gifN', 'gifStart', 'gifEnd', 'text', 'speed', 'rspeed', 'showGrid', 'source', 'editingId', 'editingName'];
-  const UI_IDS = ['printBox', 'zoom', 'infoBand', 'pOrient', 'pMargin', 'pGap', 'pInfo', 'pOutline', 'gifUrl', 'animName'];
-  let restoring = true, framesDirty = false, sdeb;
-  function scheduleSave() { if (restoring) return; clearTimeout(sdeb); sdeb = setTimeout(saveSession, 700); }
-  ['input', 'change'].forEach(t => document.addEventListener(t, scheduleSave));
-  $('printBox').addEventListener('toggle', scheduleSave);
-  document.addEventListener('click', e => { if (e.target.closest('button')) scheduleSave(); });
-
-  async function saveSession() {
-    const settings = Object.fromEntries(SKEYS.map(k => [k, S[k]]));
-    const ui = Object.fromEntries(UI_IDS.map(id => { const el = $(id); return [id, el.tagName === 'DETAILS' ? el.open : el.type === 'checkbox' ? el.checked : el.value]; }));
-    try {
-      await store.sessionPut('settings', { settings, ui });
-      if (!framesDirty) return;
-      framesDirty = false;
-      // each frame is encoded once and the PNG kept on the frame, so reordering doesn't re-encode
-      const frames = [];
-      for (const f of S.frames) frames.push({ name: f.name, blob: f.blob || (f.blob = await toPng(f.src)) });
-      await store.sessionPut('frames', { frames, gif: S.gif ? { bytes: S.gif.bytes, name: S.gif.name } : null });
-    } catch { /* storage unavailable: the work just won't survive a reload */ }
-  }
-
-  async function loadState(settings, frames, gif, ui = {}) {
-    if (settings) {
-      const text = { ...S.text, ...(settings.text || {}) };
-      Object.assign(S, settings); S.text = text;
-    }
-    S.gif = null;
-    if (gif?.bytes) { try { S.gif = decodeGif(gif.bytes, gif.name); } catch { S.gif = null; } }
-    if (!S.gif) { $('gifCtrl').hidden = true; }
-    S.frames = [];
-    for (const f of frames || []) {
-      try {
-        const b = await createImageBitmap(f.blob);
-        const c = document.createElement('canvas'); c.width = b.width; c.height = b.height;
-        c.getContext('2d').drawImage(b, 0, 0);
-        S.frames.push({ name: f.name, src: c, blob: f.blob });
-      } catch { /* skip an unreadable frame */ }
-    }
-    S.offset = 0; S.angle = 0;
-    syncUI(ui);
-  }
-
-  async function restoreSession() {
-    let rec = null, fr = null;
-    try { rec = await store.sessionGet('settings'); fr = await store.sessionGet('frames'); } catch { /* nothing stored */ }
-    await loadState(rec?.settings, fr?.frames, fr?.gif, rec?.ui || {});
-  }
-
-  // put every control in line with S (and the stored page options), then redraw once everything is set
-  function syncUI(ui) {
-    for (const [id, v] of Object.entries(ui)) {
-      const el = $(id); if (!el) continue;
-      if (el.tagName === 'DETAILS') el.open = !!v; else if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
-    }
-    $('zoom').onchange({ target: $('zoom') });
-    $('slit').value = S.w;
-    $('rays').value = S.rays; $('raysVal').textContent = S.rays;
-    $('aperture').value = Math.round(S.aperture * 100);
-    seg(S.loop ? $('loopOn') : $('loopOff'), S.loop ? $('loopOff') : $('loopOn'));
-    $('ratio').value = S.ratio ? String(S.ratio) : 'free';
-    $('dpi').value = String(S.dpi);
-    $('figScale').value = Math.round(S.figScale * 100); $('figScaleVal').textContent = `${Math.round(S.figScale * 100)}%`;
-    $('thresh').value = S.thresh; $('threshVal').textContent = S.thresh;
-    $('levels').value = S.levels; $('levelsVal').textContent = S.levels;
-    $('gray').checked = S.gray; $('invert').checked = S.invert;
-    $('fill').value = S.fill; $('fillVal').textContent = S.fill;
-    $('blur').value = S.blur; $('blurVal').textContent = `${S.blur} px`;
-    $('txt').value = S.text.str; $('txtFont').value = String(S.text.font); $('txtAnim').value = S.text.anim;
-    $('txtAngle').value = S.text.angle; $('txtAngleVal').textContent = `${S.text.angle}°`;
-    $('txtPersp').value = S.text.persp; $('txtPerspVal').textContent = `${S.text.persp}%`;
-    $('txtN').value = S.text.n; $('txtNVal').textContent = S.text.n;
-    syncText();
-    if (S.gif) gifUi();
-    seg(S.showGrid ? $('viewGrid') : $('viewBase'), S.showGrid ? $('viewBase') : $('viewGrid'));
-    setSource(S.source || 'img', false);
-    setMode(S.mode);
-    setMotion(S.radial ? 'r' : S.vertical ? 'v' : 'h');
-    renderList();
-    syncSlit();
-    setDims(S.outW, S.outH);
-    syncEditUI();
-    $('animName').value = S.editingName || $('animName').value;
-    schedulePreview();
-  }
-
-  // ---------- Start ----------
-  syncPlay();
-  restoreSession().finally(() => { restoring = false; });
-  requestAnimationFrame(tick);
-})();
-</script>
+  </body>
+</html>

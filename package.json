@@ -1,0 +1,26 @@
+{
+  "name": "scanimation-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Make scanimations (barrier-grid animations) from images, GIFs or text, and lay them out on A4 sheets at real size.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:artifact": "vite build && node scripts/artifact-page.mjs",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "jspdf": "^4.2.1",
+    "omggif": "^1.0.10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "vite": "^8.3.4"
+  }
+}
