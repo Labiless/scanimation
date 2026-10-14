@@ -1,185 +1,213 @@
-<title>Kinegram Studio</title>
+<title>Scanimation Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Rubik+Mono+One&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Rubik+Mono+One&display=swap">
 <style>
-/* Layout: two-pane workbench, controls on the left, live stage with sliding grid on the right; stacks on phones */
+/* Layout: compact control deck above a full-width live preview; black and white only, square corners */
 :root {
-  --bg: #eceef2;
-  --surface: #fafbfc;
-  --ink: #14161a;
-  --muted: #5b6270;
-  --line: #d3d8e0;
-  --accent: #2b41d4;
-  --accent-ink: #ffffff;
-  --stage: #d9dde4;
-  --font-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #ffffff;
+  --ink: #000000;
+  --inv: #ffffff;
+  --font: "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #101217; --surface: #181b22; --ink: #e7e9ee; --muted: #99a0ad;
-    --line: #2a2f39; --accent: #8496ff; --accent-ink: #0d1020; --stage: #0b0d11;
-    color-scheme: dark;
-  }
+  :root:not([data-theme="light"]) { --bg: #000000; --ink: #ffffff; --inv: #000000; color-scheme: dark; }
 }
-:root[data-theme="dark"] {
-  --bg: #101217; --surface: #181b22; --ink: #e7e9ee; --muted: #99a0ad;
-  --line: #2a2f39; --accent: #8496ff; --accent-ink: #0d1020; --stage: #0b0d11;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
+:root[data-theme="dark"] { --bg: #000000; --ink: #ffffff; --inv: #000000; color-scheme: dark; }
+
+* { box-sizing: border-box; border-radius: 0 !important; }
 [hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--ink);
-  font-family: var(--font-body); font-size: 14px; line-height: 1.5;
-  padding: 20px 16px 40px;
+  font-family: var(--font); font-size: 13px; line-height: 1.4;
+  padding: 12px 16px 32px;
 }
-.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
-h1 {
-  font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 4vw, 38px);
-  letter-spacing: -0.02em; margin: 0; line-height: 1.05; text-wrap: balance;
+.wrap { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+header p { margin: 0; font-size: 12px; }
+
+/* control deck */
+.top { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px; }
+.right { display: grid; grid-template-rows: auto 1fr; gap: 8px; min-width: 0; }
+.looks { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.mid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 1100px) {
+  .top { grid-template-columns: minmax(0, 1fr); }
+  .mid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-h1 span { background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 9px); -webkit-background-clip: text; background-clip: text; color: transparent; }
-header p { margin: 0; color: var(--muted); max-width: 60ch; }
-.grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
-@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.controls { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-h2 {
-  font-family: var(--font-body); font-size: 11px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.09em; color: var(--muted); margin: 0;
+@media (max-width: 640px) {
+  .mid, .looks { grid-template-columns: minmax(0, 1fr); }
 }
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 120px; min-width: 0; }
-.field label, .lbl { font-size: 12px; color: var(--muted); }
-.field label b { color: var(--ink); font-family: var(--font-mono); font-weight: 500; }
-.gifbox, .gifctrl { display: flex; flex-direction: column; gap: 10px; }
-.gifbox[hidden], .gifctrl[hidden] { display: none; }
-.note.error { color: #c0392b; }
-textarea { resize: vertical; font-family: var(--font-body) !important; font-size: 15px !important; }
+
+.panel { border: 1px solid var(--ink); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.row.between { justify-content: space-between; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 8px; }
+.cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
+.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.field label, .lbl { font-size: 12px; }
+.field label b, .lbl b { font-family: var(--font-mono); font-weight: 500; }
+.note { font-size: 11px; margin: 0; }
+.note.error, .note.warn { font-weight: 700; }
+.note.error::before, .note.warn::before { content: "! "; }
+
+input[type="number"], input[type="url"], input[type="text"], select, textarea {
+  font: inherit; font-family: var(--font-mono); font-size: 12px; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--ink); padding: 4px 6px; width: 100%; min-width: 0;
+}
+textarea { resize: vertical; font-family: var(--font) !important; font-size: 14px !important; }
+input[type="range"] { width: 100%; accent-color: var(--ink); margin: 2px 0; }
+input[type="checkbox"] { accent-color: var(--ink); margin: 0 4px 0 0; vertical-align: -2px; }
+input[type="color"] { width: 34px; height: 26px; padding: 1px; border: 1px solid var(--ink); background: var(--bg); cursor: pointer; flex: none; }
+
+button, .btn {
+  font: inherit; font-weight: 500; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--bg); color: var(--ink);
+  padding: 5px 10px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+button:hover, .btn:hover { background: var(--ink); color: var(--inv); }
+button.primary, .btn.primary { background: var(--ink); color: var(--inv); }
+button.primary:hover, .btn.primary:hover { background: var(--bg); color: var(--ink); }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button:disabled:hover { background: var(--bg); color: var(--ink); }
+.seg { display: inline-flex; border: 1px solid var(--ink); flex-wrap: wrap; }
+.seg button { border: 0; padding: 4px 9px; }
+.seg button + button { border-left: 1px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--inv); }
+.seg.wide { display: flex; }
+.seg.wide button { flex: 1; justify-content: center; }
+
+/* sources */
+.drop { border: 1px dashed var(--ink); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.drop.over { border-style: solid; background: var(--ink); color: var(--inv); }
+.drop .note { flex: 1; }
+.gifbox, .gifctrl { display: flex; flex-direction: column; gap: 6px; }
+.tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--ink); padding: 1px 5px; }
+
+/* frames as a horizontal strip */
+.frames {
+  list-style: none; margin: 0; padding: 6px; display: flex; gap: 6px; overflow-x: auto;
+  border: 1px solid var(--ink); min-height: 92px;
+}
+.frames li { display: flex; flex-direction: column; gap: 3px; flex: none; }
+.frames canvas { width: 76px; height: 56px; border: 1px solid var(--ink); background: #fff; display: block; }
+.frames .name { display: none; }
+.frames li { position: relative; }
+.frames li.empty { align-self: center; font-size: 12px; padding: 0 6px; position: static; }
+.frames .idx { position: absolute; top: 1px; left: 1px; font-family: var(--font-mono); font-size: 10px; background: #000; color: #fff; padding: 0 3px; }
+.frames .acts { display: flex; }
+.frames .acts button { padding: 1px 0; font-size: 11px; flex: 1; justify-content: center; }
+.frames .acts button + button { border-left: 0; }
+
+/* exports */
+.actions .row button { flex: 1 1 auto; justify-content: center; }
+.exports { display: flex; flex-wrap: wrap; gap: 8px; }
+.exports figure { margin: 0; display: flex; flex-direction: column; gap: 4px; flex: 1 1 180px; min-width: 0; }
+.exports img { border: 1px solid var(--ink); background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 12px 12px; max-width: 100%; }
+.exports figcaption { font-size: 11px; }
+.fig-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
+.fig-close { padding: 2px 8px; font-size: 11px; }
+
+/* preview */
+.stage-panel { gap: 6px; }
+.stage {
+  border: 1px solid var(--ink); overflow: auto; display: flex; justify-content: center; align-items: flex-start;
+  padding: 10px; touch-action: none;
+}
+.stage canvas { display: block; background: #fff; outline: 1px solid var(--ink); cursor: ew-resize; }
+.stage.fit canvas { max-width: 100%; max-height: max(300px, calc(100vh - 600px)); width: auto; height: auto; }
+.stage.horiz canvas { cursor: ns-resize; }
+.stage.radial canvas { cursor: grab; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.toolbar select { width: auto; }
+.speed { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 0; }
+.speed label { white-space: nowrap; font-size: 12px; }
+.readout { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+.readout b { font-weight: 500; }
+.spec {
+  font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums;
+  display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 0; padding-top: 6px; border-top: 1px solid var(--ink);
+}
+.spec dt { font-weight: 400; } .spec dt::after { content: ":"; }
+.spec dd { margin: 0 0 0 -10px; font-weight: 500; }
+
+/* A4 print section */
 .print-head { display: flex; flex-direction: column; gap: 4px; }
-.print-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+.print-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 860px) { .print-grid { grid-template-columns: minmax(0, 1fr); } }
-.print-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.print-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.print-side .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.plist li { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px; border-radius: 6px; }
-.plist li:hover { background: var(--bg); }
-.plist img { width: 44px; height: 44px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 3px; }
+.plist li { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px; border: 1px solid var(--ink); }
+.plist img { width: 44px; height: 44px; object-fit: contain; background: #fff; border: 1px solid var(--ink); }
 .pname { display: flex; flex-direction: column; min-width: 0; font-size: 12px; }
-.pname b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pname small { color: var(--muted); font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
-.copies { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
-.copies input { width: 54px; padding: 4px 6px; }
-.plist li > button { padding: 3px 8px; font-size: 12px; }
+.pname b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pname small { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+.copies { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.copies input { width: 54px; padding: 3px 5px; }
+.plist li > button { padding: 2px 8px; font-size: 12px; }
 .sheets { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .sheet-pair figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.sheet-pair canvas { width: 100%; height: auto; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); }
-.sheet-pair figcaption { font-size: 12px; color: var(--muted); }
-.note.warn { color: #b03a2e; }
-input[type="number"], input[type="url"], input[type="text"], select, textarea {
-  font: inherit; font-family: var(--font-mono); font-size: 13px; color: var(--ink);
-  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%;
-}
-input[type="range"] { width: 100%; accent-color: var(--accent); }
-input[type="color"] { width: 40px; height: 32px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); cursor: pointer; }
-.mono { font-family: var(--font-mono); font-weight: 500; color: var(--ink); }
-button, .btn {
-  font: inherit; font-weight: 500; font-size: 13px; cursor: pointer;
-  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-  border-radius: 6px; padding: 7px 12px; display: inline-flex; align-items: center; gap: 6px;
-}
-button:hover, .btn:hover { border-color: var(--muted); }
-button.primary, .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-button:disabled { opacity: .45; cursor: not-allowed; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.seg button { border: 0; border-radius: 0; padding: 6px 10px; }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
-
-.drop {
-  border: 1.5px dashed var(--line); border-radius: 8px; padding: 14px; text-align: center; color: var(--muted);
-  display: flex; flex-direction: column; gap: 8px; align-items: center;
-}
-.drop.over { border-color: var(--accent); color: var(--ink); }
-.frames { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
-.frames li { display: grid; grid-template-columns: 22px 54px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px; border-radius: 6px; }
-.frames li:hover { background: var(--bg); }
-.frames .idx { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
-.frames canvas { width: 54px; height: 40px; border-radius: 3px; border: 1px solid var(--line); background: #fff; display: block; }
-.frames .name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.frames .acts { display: flex; gap: 2px; }
-.frames .acts button { padding: 2px 7px; font-size: 12px; }
-.tag { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
-
-.stage-panel { gap: 12px; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
-.stage {
-  background: var(--stage); border-radius: 8px; overflow: auto; display: flex; justify-content: center; align-items: flex-start;
-  padding: 16px; min-height: 240px; touch-action: none;
-}
-.stage canvas { display: block; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.15); cursor: ew-resize; }
-.stage.fit canvas { max-width: 100%; max-height: max(240px, calc(100vh - 330px)); width: auto; height: auto; }
-
-/* the preview stays in view while the controls scroll past it */
-.stage-panel {
-  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
-  max-height: calc(100vh - 32px); overflow-y: auto; z-index: 2;
-}
-@media (max-width: 860px) {
-  .stage-panel {
-    order: -1; top: env(safe-area-inset-top, 0px);
-    max-height: 62vh; gap: 8px; padding: 10px;
-    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .35);
-  }
-  .stage { min-height: 0; padding: 8px; }
-  .stage.fit canvas { max-height: 34vh; }
-}
-.stage.horiz canvas { cursor: ns-resize; }
-.stage.radial canvas { cursor: grab; }
-.readout { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.readout b { color: var(--ink); font-weight: 500; }
-.spec {
-  font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
-  display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; margin: 0;
-}
-.spec dt { color: var(--muted); } .spec dd { margin: 0; color: var(--ink); }
-.note { font-size: 12px; color: var(--muted); margin: 0; }
-.exports { display: flex; flex-wrap: wrap; gap: 12px; }
-.exports figure { margin: 0; display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; min-width: 0; }
-.exports img { border: 1px solid var(--line); border-radius: 4px; background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 12px 12px; max-width: 100%; }
-.exports figcaption { font-size: 12px; color: var(--muted); }
-.fig-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
-.fig-close { padding: 3px 8px; font-size: 12px; }
-.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+.sheet-pair canvas { width: 100%; height: auto; background: #fff; border: 1px solid var(--ink); }
+.sheet-pair figcaption { font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
 <div class="wrap">
   <header>
-    <h1>Kinegram <span>Studio</span></h1>
-    <p>Carica i fotogrammi di un'animazione: lo studio crea l'immagine a strisce e la griglia da sovrapporre. Trascina la griglia sull'anteprima per vederla muoversi.</p>
+    <h1>Scanimation Studio</h1>
+    <p>Trascina la griglia sull'anteprima per muoverla a mano.</p>
   </header>
 
-  <div class="grid">
-    <div class="controls">
-      <section class="panel" aria-labelledby="h-frames">
-        <div class="row" style="justify-content:space-between">
-          <h2 id="h-frames">Fotogrammi</h2>
-          <span class="tag" id="sampleTag">Esempio</span>
-        </div>
+  <!-- Row 1: sources (left) · export and look (right) -->
+  <div class="top">
+    <section class="panel" aria-label="Fotogrammi">
+      <div class="row between">
         <div class="seg" role="group" aria-label="Origine dei fotogrammi">
           <button type="button" id="srcImg" aria-pressed="true">Immagini</button>
           <button type="button" id="srcGif" aria-pressed="false">GIF animata</button>
           <button type="button" id="srcTxt" aria-pressed="false">Testo</button>
         </div>
-        <div class="gifbox" id="textBox" hidden>
+        <div class="row">
+          <button id="reverseBtn" type="button">Inverti ordine</button>
+        </div>
+      </div>
+
+      <div class="drop" id="drop">
+        <label class="btn primary" for="fileIn">Scegli immagini…</label>
+        <span class="note">oppure trascinale qui, in ordine</span>
+        <input id="fileIn" type="file" accept="image/*" multiple hidden>
+      </div>
+
+      <div class="gifbox" id="gifBox" hidden>
+        <form class="row" id="gifForm">
+          <input id="gifUrl" type="url" placeholder="https://…/animazione.gif" aria-label="Link della GIF" style="flex:1 1 180px; width:auto">
+          <button type="submit" class="primary">Carica link</button>
+          <label class="btn" for="gifFile">Scegli GIF…</label>
+          <input id="gifFile" type="file" accept="image/gif" hidden>
+        </form>
+        <div class="drop" id="gifDrop"><span class="note">oppure trascina qui un file .gif</span></div>
+        <p class="note" id="gifStatus" role="status">Link diretti a .gif o pagine Giphy. Se il sito blocca il link, scarica la GIF e caricala come file.</p>
+        <div class="gifctrl cols" id="gifCtrl" hidden>
           <div class="field">
+            <label for="gifN">Fotogrammi: <b id="gifNVal">6</b></label>
+            <input id="gifN" type="range" min="2" max="12" value="6">
+          </div>
+          <div class="field"><label for="gifStart">Dal frame</label><input id="gifStart" type="number" min="1" value="1"></div>
+          <div class="field"><label for="gifEnd">Al frame</label><input id="gifEnd" type="number" min="1" value="1"></div>
+        </div>
+      </div>
+
+      <div class="gifbox" id="textBox" hidden>
+        <div class="cols">
+          <div class="field" style="grid-column: span 2">
             <label for="txt">Testo (Invio per andare a capo)</label>
-            <textarea id="txt" rows="2">CIAO</textarea>
+            <textarea id="txt" rows="1">CIAO</textarea>
           </div>
           <div class="field">
             <label for="txtFont">Carattere</label>
@@ -195,15 +223,15 @@ button:disabled { opacity: .45; cursor: not-allowed; }
           <div class="field">
             <label for="txtAnim">Animazione</label>
             <select id="txtAnim">
-              <option value="ry">Rotazione Y: gira come una porta</option>
-              <option value="rx">Rotazione X: si ribalta in avanti</option>
-              <option value="rz">Rotazione Z: gira sul piano</option>
-              <option value="ltr">Lettere che appaiono da sinistra a destra</option>
-              <option value="rtl">Lettere che appaiono da destra a sinistra</option>
+              <option value="ry">Rotazione Y (porta)</option>
+              <option value="rx">Rotazione X (ribalta)</option>
+              <option value="rz">Rotazione Z (piano)</option>
+              <option value="ltr">Lettere da sinistra</option>
+              <option value="rtl">Lettere da destra</option>
             </select>
           </div>
           <div class="field" id="txtAngleField">
-            <label for="txtAngle">Ampiezza rotazione: <b id="txtAngleVal">360°</b></label>
+            <label for="txtAngle">Ampiezza: <b id="txtAngleVal">360°</b></label>
             <input id="txtAngle" type="range" min="15" max="360" step="15" value="360">
           </div>
           <div class="field" id="txtPerspField">
@@ -214,77 +242,83 @@ button:disabled { opacity: .45; cursor: not-allowed; }
             <label for="txtN">Fotogrammi: <b id="txtNVal">6</b></label>
             <input id="txtN" type="range" min="2" max="12" value="6">
           </div>
-          <p class="note" id="txtNote">Con 360° la scritta fa un giro completo e il ciclo si chiude da solo. Con meno di 360°, scegli "Andata e ritorno" nella griglia per farla oscillare.</p>
         </div>
-        <div class="drop" id="drop">
-          <span>Trascina qui le immagini, in ordine</span>
-          <label class="btn primary" for="fileIn">Scegli immagini…</label>
-          <input id="fileIn" type="file" accept="image/*" multiple hidden>
-        </div>
-        <div class="gifbox" id="gifBox" hidden>
-          <form class="row" id="gifForm">
-            <input id="gifUrl" type="url" placeholder="https://…/animazione.gif" aria-label="Link della GIF" style="flex:1 1 160px">
-            <button type="submit" class="primary">Carica link</button>
-          </form>
-          <div class="drop" id="gifDrop">
-            <span>oppure trascina qui un file .gif</span>
-            <label class="btn" for="gifFile">Scegli GIF…</label>
-            <input id="gifFile" type="file" accept="image/gif" hidden>
-          </div>
-          <p class="note" id="gifStatus" role="status">Funzionano i link diretti a file .gif e le pagine di Giphy. Se un sito blocca il collegamento, scarica la GIF e caricala come file.</p>
-          <div class="gifctrl" id="gifCtrl" hidden>
-            <div class="field">
-              <label for="gifN">Fotogrammi da usare: <b id="gifNVal">6</b></label>
-              <input id="gifN" type="range" min="2" max="12" value="6">
-            </div>
-            <div class="row">
-              <div class="field"><label for="gifStart">Dal frame</label><input id="gifStart" type="number" min="1" value="1"></div>
-              <div class="field"><label for="gifEnd">Al frame</label><input id="gifEnd" type="number" min="1" value="1"></div>
-            </div>
-          </div>
-        </div>
-        <ul class="frames" id="frameList"></ul>
+        <p class="note" id="txtNote">Sotto i 360° usa il ciclo "Andata e ritorno" per farla oscillare.</p>
+      </div>
+
+      <ul class="frames" id="frameList" aria-label="Fotogrammi in ordine"></ul>
+    </section>
+
+    <div class="right">
+      <section class="panel actions" aria-label="Esporta e salva">
         <div class="row">
-          <button id="reverseBtn" type="button">Inverti ordine</button>
-          <button id="sampleBtn" type="button">Ripristina esempio</button>
+          <button id="saveGrid" type="button">Scarica griglia (PNG trasparente)</button>
+          <button id="saveBase" type="button">Scarica immagine base (PNG)</button>
         </div>
+        <label class="lbl"><input id="infoBand" type="checkbox" checked>Aggiungi sopra l'immagine una riga con le impostazioni</label>
+        <div class="row">
+          <input id="animName" type="text" placeholder="Nome (facoltativo)" aria-label="Nome dell'animazione" style="flex:1 1 140px; width:auto">
+          <button id="saveAnim" type="button" class="primary">Salva per la stampa</button>
+        </div>
+        <p class="note" id="saveMsg" role="status"></p>
+        <div class="exports" id="exports" hidden></div>
       </section>
 
-      <section class="panel" aria-labelledby="h-grid">
-        <h2 id="h-grid">Griglia</h2>
-        <div class="row">
-          <span class="lbl">Movimento</span>
-          <div class="seg" role="group" aria-label="Movimento della griglia">
-            <button type="button" id="oriV" aria-pressed="true">Verticale</button>
-            <button type="button" id="oriH" aria-pressed="false">Orizzontale</button>
-            <button type="button" id="oriR" aria-pressed="false">Circolare</button>
+      <div class="looks">
+        <section class="panel" aria-label="Colore">
+          <div class="row">
+            <span class="lbl">Colore</span>
+            <div class="seg" role="group" aria-label="Colore">
+              <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
+              <button type="button" id="modePost" aria-pressed="false">Posterizza</button>
+              <button type="button" id="modeOrig" aria-pressed="false">Originale</button>
+            </div>
           </div>
-        </div>
-        <div class="field" id="slitField">
-          <label for="slit">Larghezza striscia: <b id="slitVal">4 px</b></label>
-          <input id="slit" type="range" min="1" max="24" value="4">
-        </div>
-        <div class="field" id="raysField" hidden>
-          <label for="rays">Numero di raggi: <b id="raysVal">48</b></label>
-          <input id="rays" type="range" min="6" max="240" value="48">
-        </div>
-        <div class="row">
-          <span class="lbl">Ciclo</span>
-          <div class="seg" role="group" aria-label="Ciclo dell'animazione">
-            <button type="button" id="loopOn" aria-pressed="true">Continuo</button>
-            <button type="button" id="loopOff" aria-pressed="false">Andata e ritorno</button>
+          <div class="field" id="threshField">
+            <label for="thresh">Soglia silhouette: <b id="threshVal">140</b></label>
+            <input id="thresh" type="range" min="10" max="245" value="140">
           </div>
-        </div>
-        <div class="field">
-          <label for="aperture">Apertura fessura: <b id="apertureVal">100% della striscia</b></label>
-          <input id="aperture" type="range" min="25" max="200" step="5" value="100">
-        </div>
-        <p class="note">Sotto il 100% l'immagine è più nitida ma più scura; sopra il 100% è più luminosa ma i fotogrammi vicini si mescolano.</p>
-        <p class="note" id="radialNote" hidden>Gli spicchi partono dal centro dell'immagine: verso il centro le fessure si stringono, quindi tieni i soggetti verso l'esterno.</p>
-      </section>
+          <div class="field" id="postField" hidden>
+            <label for="levels">Livelli per colore: <b id="levelsVal">3</b></label>
+            <input id="levels" type="range" min="2" max="8" value="3">
+            <label class="lbl"><input id="gray" type="checkbox" checked>Toni di grigio</label>
+          </div>
+          <label class="lbl"><input id="invert" type="checkbox">Inverti bianco e nero</label>
+        </section>
 
-      <section class="panel" aria-labelledby="h-size">
-        <h2 id="h-size">Formato di stampa</h2>
+        <section class="panel" aria-label="Riempimento e sfocatura">
+          <div class="row" id="fillField">
+            <input id="fill" type="color" value="#000000" aria-label="Colore di riempimento">
+            <label class="lbl" for="fill">Colore di riempimento <b id="fillVal">#000000</b></label>
+          </div>
+          <div class="field">
+            <label for="blur">Sfocatura bordi: <b id="blurVal">0 px</b></label>
+            <input id="blur" type="range" min="0" max="12" step="0.5" value="0">
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: animation timing · format · size · grid -->
+  <div class="mid">
+    <section class="panel" aria-label="Ciclo e apertura">
+      <div class="row">
+        <span class="lbl">Ciclo</span>
+        <div class="seg" role="group" aria-label="Ciclo dell'animazione">
+          <button type="button" id="loopOn" aria-pressed="true">Continuo</button>
+          <button type="button" id="loopOff" aria-pressed="false">Andata e ritorno</button>
+        </div>
+      </div>
+      <div class="field" title="Sotto il 100% l'immagine è più nitida ma più scura; sopra il 100% è più luminosa ma i fotogrammi vicini si mescolano.">
+        <label for="aperture">Apertura fessura: <b id="apertureVal">100%</b></label>
+        <input id="aperture" type="range" min="25" max="200" step="5" value="100">
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-size">
+      <h2 id="h-size">Formato di stampa</h2>
+      <div class="cols2">
         <div class="field">
           <label for="ratio">Proporzioni</label>
           <select id="ratio">
@@ -300,20 +334,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
             <option value="free">Libere</option>
           </select>
         </div>
-        <div class="row">
-          <div class="field"><label for="wPx">Larghezza (px)</label><input id="wPx" type="number" min="100" max="5000" value="800"></div>
-          <div class="field"><label for="wMm">Larghezza (mm)</label><input id="wMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
-        </div>
-        <div class="row">
-          <div class="field"><label for="hPx">Altezza (px)</label><input id="hPx" type="number" min="100" max="5000" value="800"></div>
-          <div class="field"><label for="hMm">Altezza (mm)</label><input id="hMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
-        </div>
         <div class="field">
-          <label for="figScale">Dimensione figura: <b id="figScaleVal">100%</b></label>
-          <input id="figScale" type="range" min="10" max="100" step="5" value="100">
-        </div>
-        <div class="field">
-          <label for="dpi">Risoluzione di stampa (dpi)</label>
+          <label for="dpi">Risoluzione (dpi)</label>
           <select id="dpi">
             <option value="150">150</option>
             <option value="300" selected>300</option>
@@ -321,82 +343,68 @@ button:disabled { opacity: .45; cursor: not-allowed; }
             <option value="1200">1200</option>
           </select>
         </div>
-        <p class="note">La figura sta sempre al centro: in un formato più largo restano strisce libere a destra e a sinistra. Con proporzioni fisse, cambiando un lato si adatta l'altro. Cambiando i dpi resta fisso il valore che hai modificato per ultimo, px o mm. I PNG esportati contengono i dpi, quindi stampati al 100% escono della misura indicata.</p>
-      </section>
+      </div>
+      <p class="note">I PNG contengono i dpi: stampati al 100% escono della misura indicata.</p>
+    </section>
 
-      <section class="panel" aria-labelledby="h-img">
-        <h2 id="h-img">Immagine</h2>
-        <div class="row">
-          <span class="lbl">Colore</span>
-          <div class="seg" role="group" aria-label="Colore">
-            <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
-            <button type="button" id="modePost" aria-pressed="false">Posterizza</button>
-            <button type="button" id="modeOrig" aria-pressed="false">Originale</button>
-          </div>
-        </div>
-        <div class="field" id="postField" hidden>
-          <label for="levels">Livelli per colore: <b id="levelsVal">3</b></label>
-          <input id="levels" type="range" min="2" max="8" value="3">
-          <label class="lbl"><input id="gray" type="checkbox" checked> Toni di grigio</label>
-        </div>
-        <div class="field" id="threshField">
-          <label for="thresh">Soglia silhouette: <b id="threshVal">140</b></label>
-          <input id="thresh" type="range" min="10" max="245" value="140">
-        </div>
-        <div class="row" id="fillField">
-          <input id="fill" type="color" value="#000000" aria-label="Colore di riempimento">
-          <label class="lbl" for="fill">Colore di riempimento <b id="fillVal" class="mono">#000000</b></label>
-        </div>
-        <div class="field">
-          <label for="blur">Sfocatura bordi: <b id="blurVal">0 px</b></label>
-          <input id="blur" type="range" min="0" max="12" step="0.5" value="0">
-        </div>
-        <div class="row"><label class="lbl"><input id="invert" type="checkbox"> Inverti bianco e nero</label></div>
-      </section>
-
-      <section class="panel" aria-labelledby="h-print">
-        <h2 id="h-print">Misure</h2>
-        <dl class="spec" id="spec"></dl>
-        <p class="note">Stampa la griglia su acetato trasparente al 100%, senza adattarla alla pagina: deve avere la stessa scala dell'immagine base.</p>
-      </section>
-    </div>
-
-    <section class="panel stage-panel" aria-labelledby="h-stage">
-      <div class="toolbar">
-        <h2 id="h-stage">Anteprima</h2>
-        <div class="row">
-          <button id="playBtn" type="button" class="primary">Pausa</button>
-          <button id="stepBtn" type="button">Fotogramma successivo</button>
-          <div class="seg" role="group" aria-label="Vista">
-            <button type="button" id="viewGrid" aria-pressed="true">Con griglia</button>
-            <button type="button" id="viewBase" aria-pressed="false">Solo base</button>
-          </div>
-          <select id="zoom" aria-label="Zoom" style="width:auto">
-            <option value="fit">Adatta</option>
-            <option value="1">100%</option>
-            <option value="2">200%</option>
-          </select>
-        </div>
+    <section class="panel" aria-label="Dimensioni">
+      <div class="cols2">
+        <div class="field"><label for="wPx">Larghezza (px)</label><input id="wPx" type="number" min="100" max="5000" value="800"></div>
+        <div class="field"><label for="wMm">Larghezza (mm)</label><input id="wMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
+        <div class="field"><label for="hPx">Altezza (px)</label><input id="hPx" type="number" min="100" max="5000" value="800"></div>
+        <div class="field"><label for="hMm">Altezza (mm)</label><input id="hMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
       </div>
       <div class="field">
+        <label for="figScale">Dimensione figura: <b id="figScaleVal">100%</b></label>
+        <input id="figScale" type="range" min="10" max="100" step="5" value="100">
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-grid">
+      <h2 id="h-grid">Griglia</h2>
+      <div class="row">
+        <span class="lbl">Movimento</span>
+        <div class="seg" role="group" aria-label="Movimento della griglia">
+          <button type="button" id="oriV" aria-pressed="true">Verticale</button>
+          <button type="button" id="oriH" aria-pressed="false">Orizzontale</button>
+          <button type="button" id="oriR" aria-pressed="false">Circolare</button>
+        </div>
+      </div>
+      <div class="field" id="slitField">
+        <label for="slit">Larghezza striscia: <b id="slitVal">4 px</b></label>
+        <input id="slit" type="range" min="1" max="24" value="4">
+      </div>
+      <div class="field" id="raysField" hidden>
+        <label for="rays">Numero di raggi: <b id="raysVal">48</b></label>
+        <input id="rays" type="range" min="6" max="240" value="48">
+      </div>
+      <p class="note" id="radialNote" hidden>Verso il centro le fessure si stringono: tieni i soggetti verso l'esterno.</p>
+    </section>
+  </div>
+
+  <!-- Row 3: live preview -->
+  <section class="panel stage-panel" aria-label="Anteprima">
+    <div class="stage fit" id="stage"><canvas id="view" aria-label="Anteprima animazione"></canvas></div>
+    <div class="toolbar">
+      <button id="playBtn" type="button" class="primary">Pausa</button>
+      <button id="stepBtn" type="button">Fotogramma successivo</button>
+      <div class="seg" role="group" aria-label="Vista">
+        <button type="button" id="viewGrid" aria-pressed="true">Con griglia</button>
+        <button type="button" id="viewBase" aria-pressed="false">Solo base</button>
+      </div>
+      <select id="zoom" aria-label="Zoom">
+        <option value="fit">Adatta</option>
+        <option value="1">100%</option>
+        <option value="2">200%</option>
+      </select>
+      <div class="speed">
         <label for="speed">Velocità griglia: <b id="speedVal">30 px/s</b></label>
         <input id="speed" type="range" min="2" max="200" value="30">
       </div>
-      <div class="stage fit" id="stage"><canvas id="view" aria-label="Anteprima animazione"></canvas></div>
-      <div class="readout" id="readout"></div>
-      <div class="row">
-        <button id="saveBase" type="button" class="primary">Scarica immagine base (PNG)</button>
-        <button id="saveGrid" type="button">Scarica griglia (PNG trasparente)</button>
-      </div>
-      <label class="lbl"><input id="infoBand" type="checkbox" checked> Aggiungi sopra l'immagine una riga con le impostazioni</label>
-      <div class="exports" id="exports" hidden></div>
-      <div class="row">
-        <input id="animName" type="text" placeholder="Nome (facoltativo)" aria-label="Nome dell'animazione" style="flex:1 1 160px; width:auto">
-        <button id="saveAnim" type="button" class="primary">Salva per la stampa</button>
-      </div>
-      <p class="note" id="saveMsg" role="status"></p>
-    </section>
-  </div>
+    </div>
+    <div class="readout" id="readout"></div>
+    <dl class="spec" id="spec" aria-label="Misure"></dl>
+  </section>
 
   <section class="panel" id="stampa" aria-labelledby="h-sheet">
     <div class="print-head">
@@ -406,17 +414,17 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     <div class="print-grid">
       <div class="print-side">
         <ul class="plist" id="printList"></ul>
-        <p class="note" id="printEmpty">Nessuna animazione salvata. Prepara un'animazione e premi "Salva per la stampa" sotto l'anteprima.</p>
+        <p class="note" id="printEmpty">Nessuna animazione salvata. Prepara un'animazione e premi "Salva per la stampa" in alto.</p>
         <p class="note" id="storeNote" hidden>Questo browser non permette di conservare le animazioni: restano disponibili finché la pagina è aperta.</p>
-        <div class="row">
+        <div class="cols3">
           <div class="field"><label for="pOrient">Foglio</label>
             <select id="pOrient"><option value="p">A4 verticale</option><option value="l">A4 orizzontale</option></select>
           </div>
           <div class="field"><label for="pMargin">Margine (mm)</label><input id="pMargin" type="number" min="0" max="40" step="1" value="10"></div>
-          <div class="field"><label for="pGap">Spazio tra pezzi (mm)</label><input id="pGap" type="number" min="0" max="30" step="1" value="5"></div>
+          <div class="field"><label for="pGap">Spazio (mm)</label><input id="pGap" type="number" min="0" max="30" step="1" value="5"></div>
         </div>
-        <label class="lbl"><input id="pInfo" type="checkbox" checked> Stampa le impostazioni sopra ogni pezzo</label>
-        <label class="lbl"><input id="pOutline" type="checkbox" checked> Bordo sottile per il taglio</label>
+        <label class="lbl"><input id="pInfo" type="checkbox" checked>Stampa le impostazioni sopra ogni pezzo</label>
+        <label class="lbl"><input id="pOutline" type="checkbox" checked>Bordo sottile per il taglio</label>
         <div class="row">
           <button id="pdfBase" type="button" class="primary">Scarica PDF immagini</button>
           <button id="pdfGrid" type="button">Scarica PDF griglie</button>
@@ -437,7 +445,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const S = {
-    frames: [], isSample: true,
+    frames: [], source: 'img',
     w: 4, vertical: true, radial: false, rays: 48, aperture: 1, loop: true,
     outW: 800, outH: 800, dpi: 300, lockMm: false, ratio: 1, figScale: 1,
     mode: 'sil', thresh: 140, invert: false, fill: '#000000', blur: 0, levels: 3, gray: true,
@@ -460,29 +468,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   const baseCv = document.createElement('canvas');
   const gridCv = document.createElement('canvas');
 
-  // ---------- Sample frames: a rotating star and an orbiting ball, a seamless loop ----------
-  function makeSample(n = 6) {
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      const c = document.createElement('canvas'); c.width = 800; c.height = 800;
-      const g = c.getContext('2d');
-      g.fillStyle = '#fff'; g.fillRect(0, 0, 800, 800); g.fillStyle = '#000';
-      // star: 5-fold symmetric, so rotating 72° over n frames loops
-      const rot = (i / n) * (Math.PI * 2 / 5), cx = 300, cy = 400;
-      g.beginPath();
-      for (let k = 0; k < 10; k++) {
-        const r = k % 2 ? 70 : 170, a = rot + k * Math.PI / 5 - Math.PI / 2;
-        g.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
-      }
-      g.closePath(); g.fill();
-      // ball orbiting
-      const a = (i / n) * Math.PI * 2;
-      g.beginPath(); g.arc(610 + 80 * Math.cos(a), 400 + 200 * Math.sin(a), 50, 0, Math.PI * 2); g.fill();
-      out.push({ name: `esempio-${i + 1}.png`, src: c });
-    }
-    return out;
-  }
-
   // ---------- Frame list ----------
   function renderList() {
     const ul = $('frameList'); ul.innerHTML = '';
@@ -496,20 +481,24 @@ button:disabled { opacity: .45; cursor: not-allowed; }
       const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = f.name; nm.title = f.name; li.appendChild(nm);
       const acts = document.createElement('span'); acts.className = 'acts';
       acts.append(
-        mkBtn('↑', `Sposta su il fotogramma ${i + 1}`, i === 0, () => move(i, -1)),
-        mkBtn('↓', `Sposta giù il fotogramma ${i + 1}`, i === S.frames.length - 1, () => move(i, 1)),
+        mkBtn('←', `Sposta a sinistra il fotogramma ${i + 1}`, i === 0, () => move(i, -1)),
+        mkBtn('→', `Sposta a destra il fotogramma ${i + 1}`, i === S.frames.length - 1, () => move(i, 1)),
         mkBtn('✕', `Rimuovi il fotogramma ${i + 1}`, false, () => { S.frames.splice(i, 1); changed(); })
       );
       li.appendChild(acts); ul.appendChild(li);
     });
-    $('sampleTag').hidden = !S.isSample;
+    if (!S.frames.length) {
+      const li = document.createElement('li'); li.className = 'empty';
+      li.textContent = 'Nessun fotogramma: carica delle immagini, una GIF o scrivi un testo.';
+      ul.appendChild(li);
+    }
   }
   function mkBtn(t, label, dis, fn) {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = t;
     b.setAttribute('aria-label', label); b.disabled = dis; b.onclick = fn; return b;
   }
   function move(i, d) { const f = S.frames.splice(i, 1)[0]; S.frames.splice(i + d, 0, f); changed(); }
-  function changed() { renderList(); rebuild(); }
+  function changed() { framesDirty = true; renderList(); rebuild(); scheduleSave(); }
 
   // ---------- Text: lay the text out once, then render it per frame ----------
   const FONTS = [
@@ -583,7 +572,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
         frames.push({ name: `testo ${i + 1}: ${Math.round(th * 180 / Math.PI)}°`, src: c });
       }
     }
-    S.frames = frames; S.isSample = false;
+    S.frames = frames;
     changed();
   }
 
@@ -615,19 +604,27 @@ button:disabled { opacity: .45; cursor: not-allowed; }
         for (let y = info.y; y < info.y + info.height; y++) pixels.fill(0, (y * W + info.x) * 4, (y * W + info.x + info.width) * 4);
       } else if (saved) pixels.set(saved);
     }
-    return { name, frames, W, H, total: r.numFrames() };
+    return { name, bytes, frames, W, H, total: r.numFrames() };
   }
 
   function useGif(gif) {
     S.gif = gif;
     S.gifStart = 1; S.gifEnd = gif.frames.length;
     S.gifN = Math.min(6, gif.frames.length);
-    $('gifStart').max = $('gifEnd').max = gif.frames.length;
-    $('gifStart').value = 1; $('gifEnd').value = gif.frames.length;
-    $('gifCtrl').hidden = false;
-    const cut = gif.total > gif.frames.length ? ` (usati i primi ${gif.frames.length})` : '';
-    setGifStatus(`${gif.name}: ${gif.total} frame${cut}, ${gif.W}×${gif.H} px.`);
+    gifUi();
     sampleGif();
+  }
+
+  // GIF controls reflect S.gif and the chosen range (also used when a saved session is restored)
+  function gifUi() {
+    const g = S.gif, len = g.frames.length;
+    S.gifEnd = Math.min(S.gifEnd, len); S.gifStart = Math.min(S.gifStart, S.gifEnd - 1);
+    $('gifStart').max = $('gifEnd').max = len;
+    $('gifStart').value = S.gifStart; $('gifEnd').value = S.gifEnd;
+    $('gifN').max = Math.max(2, Math.min(S.gifEnd - S.gifStart + 1, 24)); $('gifN').value = S.gifN; $('gifNVal').textContent = S.gifN;
+    $('gifCtrl').hidden = false;
+    const cut = g.total > len ? ` (usati i primi ${len})` : '';
+    setGifStatus(`${g.name}: ${g.total} frame${cut}, ${g.W}×${g.H} px.`);
   }
 
   // evenly spaced frames from the chosen range; the step skips the range end so the loop closes cleanly
@@ -640,7 +637,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
       const k = S.gifStart - 1 + Math.floor(i * span / n);
       return { name: `frame ${k + 1} di ${g.total}`, src: g.frames[k] };
     });
-    S.isSample = false;
     changed();
   }
 
@@ -689,7 +685,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
         loaded.push({ name: f.name, src: c });
       } catch { /* unreadable image: skip it */ }
     }
-    if (S.isSample) { S.frames = []; S.isSample = false; }
     S.frames.push(...loaded);
     changed();
   }
@@ -805,8 +800,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     }
     vctx.fillStyle = '#fff'; vctx.fillRect(0, 0, view.width, view.height);
     if (N < 2) {
-      vctx.fillStyle = '#5b6270'; vctx.font = '16px "IBM Plex Sans", sans-serif'; vctx.textAlign = 'center';
-      vctx.fillText('Servono almeno 2 fotogrammi', view.width / 2, view.height / 2);
+      vctx.fillStyle = '#000'; vctx.font = `${Math.round(Math.min(view.width, view.height) / 28)}px Roboto, Arial, sans-serif`; vctx.textAlign = 'center';
+      vctx.fillText(S.frames.length ? 'Servono almeno 2 fotogrammi' : 'Carica delle immagini, una GIF o scrivi un testo', view.width / 2, view.height / 2);
       $('readout').textContent = '';
     } else if (S.radial) {
       vctx.drawImage(baseCv, 0, 0);
@@ -970,7 +965,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     const fs = Math.max(10, Math.round(1.8 / 25.4 * S.dpi)); // about 1.8 mm tall text once printed
     const pad = Math.round(fs * 0.7), lh = Math.round(fs * 1.35), sep = '   ·   ';
     const m = document.createElement('canvas').getContext('2d');
-    const font = w => `${w} ${fs}px "IBM Plex Sans", Arial, sans-serif`;
+    const font = w => `${w} ${fs}px Roboto, Arial, sans-serif`;
     m.font = font(500);
     // wrap segments greedily; base and grid share the same text, so their bands match in height
     const [first, ...rest] = infoSegments(), lines = [];
@@ -992,11 +987,11 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     return out;
   }
 
-  $('saveBase').onclick = () => { if (S.frames.length >= 2) save(withInfo(baseCv, 'BASE', false), `kinegram-base-${sizeTag()}.png`, 'Immagine base'); };
+  $('saveBase').onclick = () => { if (S.frames.length >= 2) save(withInfo(baseCv, 'BASE', false), `scanimation-base-${sizeTag()}.png`, 'Immagine base'); };
   $('saveGrid').onclick = () => {
     if (S.frames.length < 2) return;
     const c = gridCanvas();
-    save(withInfo(c, 'GRIGLIA', true), `kinegram-griglia-${sizeTag()}.png`, 'Griglia');
+    save(withInfo(c, 'GRIGLIA', true), `scanimation-griglia-${sizeTag()}.png`, 'Griglia');
   };
 
   // ---------- Controls ----------
@@ -1092,12 +1087,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     view.style.imageRendering = z === 'fit' ? '' : 'pixelated';
   };
 
-  function setSource(src) {
+  function setSource(src, generate = true) {
+    S.source = src;
     [['srcImg', 'img'], ['srcGif', 'gif'], ['srcTxt', 'txt']].forEach(([id, v]) => $(id).setAttribute('aria-pressed', String(v === src)));
     $('drop').hidden = src !== 'img';
     $('gifBox').hidden = src !== 'gif';
     $('textBox').hidden = src !== 'txt';
-    if (src === 'txt') makeTextFrames();
+    if (src === 'txt' && generate) makeTextFrames();
   }
   $('srcImg').onclick = () => setSource('img');
   $('srcGif').onclick = () => setSource('gif');
@@ -1136,7 +1132,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   $('gifEnd').onchange = clampRange;
 
   $('reverseBtn').onclick = () => { S.frames.reverse(); changed(); };
-  $('sampleBtn').onclick = () => { S.frames = makeSample(); S.isSample = true; changed(); };
   $('fileIn').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   const drop = $('drop');
   ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
@@ -1147,21 +1142,27 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   const store = (() => {
     let dbp = null;
     const open = () => dbp || (dbp = new Promise((res, rej) => {
-      const r = indexedDB.open('kinegram-studio', 1);
-      r.onupgradeneeded = () => r.result.createObjectStore('anims', { keyPath: 'id' });
+      const r = indexedDB.open('kinegram-studio', 2);
+      r.onupgradeneeded = () => {
+        const db = r.result;
+        if (!db.objectStoreNames.contains('anims')) db.createObjectStore('anims', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('session')) db.createObjectStore('session');
+      };
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     }));
-    const run = async (mode, fn) => {
+    const run = async (mode, fn, name = 'anims') => {
       const db = await open();
       return new Promise((res, rej) => {
-        const t = db.transaction('anims', mode), req = fn(t.objectStore('anims'));
+        const t = db.transaction(name, mode), req = fn(t.objectStore(name));
         t.oncomplete = () => res(req.result); t.onerror = () => rej(t.error);
       });
     };
     return {
       all: () => run('readonly', s => s.getAll()),
       put: v => run('readwrite', s => s.put(v)),
-      del: id => run('readwrite', s => s.delete(id))
+      del: id => run('readwrite', s => s.delete(id)),
+      sessionGet: k => run('readonly', s => s.get(k), 'session'),
+      sessionPut: (k, v) => run('readwrite', s => s.put(v, k), 'session')
     };
   })();
   // record: { id, name, created, wMm, hMm, info, base: Blob, grid: Blob, checked, copies }
@@ -1353,7 +1354,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     const label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparo il PDF…';
     try {
       const blob = await buildPdf(kind);
-      await deliver(blob, kind === 'base' ? 'kinegram-fogli-immagini.pdf' : 'kinegram-fogli-griglie.pdf');
+      await deliver(blob, kind === 'base' ? 'scanimation-fogli-immagini.pdf' : 'scanimation-fogli-griglie.pdf');
     } catch (e) {
       $('printMsg').textContent = `Non sono riuscito a creare il PDF: ${e.message || e}`;
     } finally { btn.disabled = false; btn.textContent = label; }
@@ -1401,12 +1402,86 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     renderPrint();
   })();
 
+  // ---------- Work session: the current animation comes back after a reload ----------
+  const SKEYS = ['w', 'vertical', 'radial', 'rays', 'aperture', 'loop', 'outW', 'outH', 'dpi', 'lockMm', 'ratio', 'figScale',
+    'mode', 'thresh', 'invert', 'fill', 'blur', 'levels', 'gray', 'gifN', 'gifStart', 'gifEnd', 'text', 'speed', 'rspeed', 'showGrid', 'source'];
+  const UI_IDS = ['zoom', 'infoBand', 'pOrient', 'pMargin', 'pGap', 'pInfo', 'pOutline', 'gifUrl', 'animName'];
+  let restoring = true, framesDirty = false, sdeb;
+  function scheduleSave() { if (restoring) return; clearTimeout(sdeb); sdeb = setTimeout(saveSession, 700); }
+  ['input', 'change'].forEach(t => document.addEventListener(t, scheduleSave));
+  document.addEventListener('click', e => { if (e.target.closest('button')) scheduleSave(); });
+
+  async function saveSession() {
+    const settings = Object.fromEntries(SKEYS.map(k => [k, S[k]]));
+    const ui = Object.fromEntries(UI_IDS.map(id => { const el = $(id); return [id, el.type === 'checkbox' ? el.checked : el.value]; }));
+    try {
+      await store.sessionPut('settings', { settings, ui });
+      if (!framesDirty) return;
+      framesDirty = false;
+      // each frame is encoded once and the PNG kept on the frame, so reordering doesn't re-encode
+      const frames = [];
+      for (const f of S.frames) frames.push({ name: f.name, blob: f.blob || (f.blob = await toPng(f.src)) });
+      await store.sessionPut('frames', { frames, gif: S.gif ? { bytes: S.gif.bytes, name: S.gif.name } : null });
+    } catch { /* storage unavailable: the work just won't survive a reload */ }
+  }
+
+  async function restoreSession() {
+    let rec = null, fr = null;
+    try { rec = await store.sessionGet('settings'); fr = await store.sessionGet('frames'); } catch { /* nothing stored */ }
+    if (rec?.settings) {
+      const text = { ...S.text, ...(rec.settings.text || {}) };
+      Object.assign(S, rec.settings); S.text = text;
+    }
+    if (fr?.gif?.bytes) { try { S.gif = decodeGif(fr.gif.bytes, fr.gif.name); } catch { S.gif = null; } }
+    for (const f of fr?.frames || []) {
+      try {
+        const b = await createImageBitmap(f.blob);
+        const c = document.createElement('canvas'); c.width = b.width; c.height = b.height;
+        c.getContext('2d').drawImage(b, 0, 0);
+        S.frames.push({ name: f.name, src: c, blob: f.blob });
+      } catch { /* skip an unreadable frame */ }
+    }
+    syncUI(rec?.ui || {});
+  }
+
+  // put every control in line with S (and the stored page options), then redraw once everything is set
+  function syncUI(ui) {
+    for (const [id, v] of Object.entries(ui)) {
+      const el = $(id); if (!el) continue;
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+    }
+    $('zoom').onchange({ target: $('zoom') });
+    $('slit').value = S.w;
+    $('rays').value = S.rays; $('raysVal').textContent = S.rays;
+    $('aperture').value = Math.round(S.aperture * 100);
+    seg(S.loop ? $('loopOn') : $('loopOff'), S.loop ? $('loopOff') : $('loopOn'));
+    $('ratio').value = S.ratio ? String(S.ratio) : 'free';
+    $('dpi').value = String(S.dpi);
+    $('figScale').value = Math.round(S.figScale * 100); $('figScaleVal').textContent = `${Math.round(S.figScale * 100)}%`;
+    $('thresh').value = S.thresh; $('threshVal').textContent = S.thresh;
+    $('levels').value = S.levels; $('levelsVal').textContent = S.levels;
+    $('gray').checked = S.gray; $('invert').checked = S.invert;
+    $('fill').value = S.fill; $('fillVal').textContent = S.fill;
+    $('blur').value = S.blur; $('blurVal').textContent = `${S.blur} px`;
+    $('txt').value = S.text.str; $('txtFont').value = String(S.text.font); $('txtAnim').value = S.text.anim;
+    $('txtAngle').value = S.text.angle; $('txtAngleVal').textContent = `${S.text.angle}°`;
+    $('txtPersp').value = S.text.persp; $('txtPerspVal').textContent = `${S.text.persp}%`;
+    $('txtN').value = S.text.n; $('txtNVal').textContent = S.text.n;
+    syncText();
+    if (S.gif) gifUi();
+    seg(S.showGrid ? $('viewGrid') : $('viewBase'), S.showGrid ? $('viewBase') : $('viewGrid'));
+    setSource(S.source || 'img', false);
+    setMode(S.mode);
+    setMotion(S.radial ? 'r' : S.vertical ? 'v' : 'h');
+    renderList();
+    syncSlit();
+    setDims(S.outW, S.outH);
+    schedulePreview();
+  }
+
   // ---------- Start ----------
-  S.frames = makeSample();
   syncPlay();
-  syncSlit();
-  renderList();
-  setDims(S.outW, S.outH);
+  restoreSession().finally(() => { restoring = false; });
   requestAnimationFrame(tick);
 })();
 </script>
