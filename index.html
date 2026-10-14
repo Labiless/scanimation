@@ -60,7 +60,27 @@ h2 {
 .gifbox[hidden], .gifctrl[hidden] { display: none; }
 .note.error { color: #c0392b; }
 textarea { resize: vertical; font-family: var(--font-body) !important; font-size: 15px !important; }
-input[type="number"], input[type="url"], select, textarea {
+.print-head { display: flex; flex-direction: column; gap: 4px; }
+.print-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .print-grid { grid-template-columns: minmax(0, 1fr); } }
+.print-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.plist li { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px; border-radius: 6px; }
+.plist li:hover { background: var(--bg); }
+.plist img { width: 44px; height: 44px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 3px; }
+.pname { display: flex; flex-direction: column; min-width: 0; font-size: 12px; }
+.pname b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pname small { color: var(--muted); font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+.copies { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.copies input { width: 54px; padding: 4px 6px; }
+.plist li > button { padding: 3px 8px; font-size: 12px; }
+.sheets { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sheet-pair figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sheet-pair canvas { width: 100%; height: auto; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); }
+.sheet-pair figcaption { font-size: 12px; color: var(--muted); }
+.note.warn { color: #b03a2e; }
+input[type="number"], input[type="url"], input[type="text"], select, textarea {
   font: inherit; font-family: var(--font-mono); font-size: 13px; color: var(--ink);
   background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%;
 }
@@ -370,11 +390,47 @@ button:disabled { opacity: .45; cursor: not-allowed; }
       </div>
       <label class="lbl"><input id="infoBand" type="checkbox" checked> Aggiungi sopra l'immagine una riga con le impostazioni</label>
       <div class="exports" id="exports" hidden></div>
+      <div class="row">
+        <input id="animName" type="text" placeholder="Nome (facoltativo)" aria-label="Nome dell'animazione" style="flex:1 1 160px; width:auto">
+        <button id="saveAnim" type="button" class="primary">Salva per la stampa</button>
+      </div>
+      <p class="note" id="saveMsg" role="status"></p>
     </section>
   </div>
+
+  <section class="panel" id="stampa" aria-labelledby="h-sheet">
+    <div class="print-head">
+      <h2 id="h-sheet">Stampa su A4</h2>
+      <p class="note">Le animazioni salvate vengono disposte in automatico su due serie di fogli con lo stesso schema: una con le immagini, una con le griglie da stampare su acetato. Ogni pezzo ha la misura reale impostata.</p>
+    </div>
+    <div class="print-grid">
+      <div class="print-side">
+        <ul class="plist" id="printList"></ul>
+        <p class="note" id="printEmpty">Nessuna animazione salvata. Prepara un'animazione e premi "Salva per la stampa" sotto l'anteprima.</p>
+        <p class="note" id="storeNote" hidden>Questo browser non permette di conservare le animazioni: restano disponibili finché la pagina è aperta.</p>
+        <div class="row">
+          <div class="field"><label for="pOrient">Foglio</label>
+            <select id="pOrient"><option value="p">A4 verticale</option><option value="l">A4 orizzontale</option></select>
+          </div>
+          <div class="field"><label for="pMargin">Margine (mm)</label><input id="pMargin" type="number" min="0" max="40" step="1" value="10"></div>
+          <div class="field"><label for="pGap">Spazio tra pezzi (mm)</label><input id="pGap" type="number" min="0" max="30" step="1" value="5"></div>
+        </div>
+        <label class="lbl"><input id="pInfo" type="checkbox" checked> Stampa le impostazioni sopra ogni pezzo</label>
+        <label class="lbl"><input id="pOutline" type="checkbox" checked> Bordo sottile per il taglio</label>
+        <div class="row">
+          <button id="pdfBase" type="button" class="primary">Scarica PDF immagini</button>
+          <button id="pdfGrid" type="button">Scarica PDF griglie</button>
+        </div>
+        <p class="note" id="printMsg" role="status"></p>
+        <p class="note">Stampa i PDF al 100% ("Dimensioni effettive"), senza adattarli alla pagina.</p>
+      </div>
+      <div class="sheets" id="sheets"></div>
+    </div>
+  </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -799,6 +855,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 
   // ---------- Print spec ----------
   function updateSpec() {
+    syncAperture();
     const N = count(), mm = pxToMm, n0 = S.frames.length;
     const P = N * S.w;
     const framesTxt = N === n0 ? `${N}` : `${N} nel ciclo (${n0} caricati, andata e ritorno)`;
@@ -854,13 +911,28 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     return new Blob([out], { type: 'image/png' });
   }
 
+  // the viewer's save dialog when the page runs inside claude.ai, a plain download link otherwise
+  let dl = null;
+  try { window.claude?.use?.('downloads')?.then(d => { dl = d; }).catch(() => {}); } catch { /* not in a viewer */ }
+  async function deliver(blob, filename) {
+    if (dl) {
+      try { await dl.save({ filename, data: blob }); return 'saved'; }
+      catch (e) { if (e?.code === 'declined' || e?.code === 'rate_limited') return 'declined'; }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return 'link';
+  }
+
   function save(canvas, filename, caption) {
     canvas.toBlob(async raw => {
       const blob = await withDpi(raw, S.dpi);
+      const how = await deliver(blob, filename);
+      // inside a sandboxed frame a plain link may do nothing: show the image so it can be saved by hand
+      if (how !== 'link' || window.top === window) return;
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove();
-      // fallback when the browser blocks the download: show the image to save manually
       const box = $('exports'); box.hidden = false;
       let fig = box.querySelector(`[data-f="${filename}"]`);
       if (!fig) { fig = document.createElement('figure'); fig.dataset.f = filename; box.appendChild(fig); }
@@ -888,6 +960,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     } else {
       seg.push(`Striscia ${mm(S.w)} mm`, `Apertura ${mm(S.w * S.aperture)} mm`);
     }
+    seg.push(`${count()}F`);
     return seg;
   }
 
@@ -922,9 +995,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   $('saveBase').onclick = () => { if (S.frames.length >= 2) save(withInfo(baseCv, 'BASE', false), `kinegram-base-${sizeTag()}.png`, 'Immagine base'); };
   $('saveGrid').onclick = () => {
     if (S.frames.length < 2) return;
-    const c = document.createElement('canvas'); c.width = S.outW; c.height = S.outH;
-    if (S.radial) makeRadialGrid(c.getContext('2d'), S.outW, S.outH, S.outW / 2, S.outH / 2, diag() / 2);
-    else makeGrid(c.getContext('2d'), S.outW, S.outH);
+    const c = gridCanvas();
     save(withInfo(c, 'GRIGLIA', true), `kinegram-griglia-${sizeTag()}.png`, 'Griglia');
   };
 
@@ -934,7 +1005,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   function seg(onBtn, offBtn) { onBtn.setAttribute('aria-pressed', 'true'); offBtn.setAttribute('aria-pressed', 'false'); }
 
   const syncSlit = () => { $('slitVal').textContent = `${S.w} px ≈ ${pxToMm(S.w).toFixed(2)} mm`; };
-  $('slit').oninput = e => { S.w = +e.target.value; syncSlit(); later(); };
+  $('slit').oninput = e => { S.w = +e.target.value; syncSlit(); syncAperture(); later(); };
   $('loopOn').onclick = () => { S.loop = true; seg($('loopOn'), $('loopOff')); rebuild(); };
   $('loopOff').onclick = () => { S.loop = false; seg($('loopOff'), $('loopOn')); rebuild(); };
   function setMotion(mode) {
@@ -955,10 +1026,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   $('oriV').onclick = () => setMotion('v');
   $('oriH').onclick = () => setMotion('h');
   $('oriR').onclick = () => setMotion('r');
-  $('aperture').oninput = e => {
-    S.aperture = +e.target.value / 100;
-    $('apertureVal').textContent = `${e.target.value}% della striscia`; later();
-  };
+  // the circular slit widens outwards, so its width is quoted at the edge of the circle
+  function syncAperture() {
+    const pct = Math.round(S.aperture * 100), n = Math.max(count(), 1);
+    const px = S.radial ? Math.min(S.outW, S.outH) / 2 * (Math.PI * 2 / (S.rays * n)) * S.aperture : S.w * S.aperture;
+    $('apertureVal').textContent = `${pct}% ≈ ${pxToMm(px).toFixed(2)} mm${S.radial ? ' al bordo' : ''}`;
+  }
+  $('aperture').oninput = e => { S.aperture = +e.target.value / 100; syncAperture(); later(); };
   $('rays').oninput = e => { S.rays = +e.target.value; $('raysVal').textContent = S.rays; later(); };
   const clampSize = v => Math.max(100, Math.min(5000, Math.round(+v || 0)));
   const mmToPx = v => (+v || 0) / 25.4 * S.dpi;
@@ -1068,6 +1142,264 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+  // ---------- Saved animations, kept in this browser (IndexedDB) ----------
+  const store = (() => {
+    let dbp = null;
+    const open = () => dbp || (dbp = new Promise((res, rej) => {
+      const r = indexedDB.open('kinegram-studio', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('anims', { keyPath: 'id' });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    }));
+    const run = async (mode, fn) => {
+      const db = await open();
+      return new Promise((res, rej) => {
+        const t = db.transaction('anims', mode), req = fn(t.objectStore('anims'));
+        t.oncomplete = () => res(req.result); t.onerror = () => rej(t.error);
+      });
+    };
+    return {
+      all: () => run('readonly', s => s.getAll()),
+      put: v => run('readwrite', s => s.put(v)),
+      del: id => run('readwrite', s => s.delete(id))
+    };
+  })();
+  // record: { id, name, created, wMm, hMm, info, base: Blob, grid: Blob, checked, copies }
+  let saved = [], persistent = true;
+  const thumbs = new Map(), bitmaps = new Map();
+  const persist = rec => store.put(rec).catch(() => { persistent = false; $('storeNote').hidden = false; });
+  const toPng = c => new Promise(r => c.toBlob(r, 'image/png'));
+
+  function gridCanvas() {
+    const c = document.createElement('canvas'); c.width = S.outW; c.height = S.outH;
+    if (S.radial) makeRadialGrid(c.getContext('2d'), S.outW, S.outH, S.outW / 2, S.outH / 2, diag() / 2);
+    else makeGrid(c.getContext('2d'), S.outW, S.outH);
+    return c;
+  }
+
+  $('saveAnim').onclick = async () => {
+    if (S.frames.length < 2) { $('saveMsg').textContent = 'Servono almeno 2 fotogrammi per salvare.'; return; }
+    const name = $('animName').value.trim() || `Animazione ${saved.length + 1}`;
+    const rec = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, created: Date.now(),
+      wMm: pxToMm(S.outW), hMm: pxToMm(S.outH), info: infoSegments(),
+      base: await toPng(baseCv), grid: await toPng(gridCanvas()), checked: true, copies: 1
+    };
+    saved.push(rec);
+    persist(rec);
+    $('animName').value = '';
+    $('saveMsg').textContent = `Salvata "${name}" (${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm). La trovi nella sezione Stampa in fondo alla pagina.`;
+    renderPrint();
+  };
+
+  function renderPrint() {
+    const ul = $('printList'); ul.innerHTML = '';
+    $('printEmpty').hidden = saved.length > 0;
+    $('storeNote').hidden = persistent;
+    saved.forEach(rec => {
+      if (!thumbs.has(rec.id)) thumbs.set(rec.id, URL.createObjectURL(rec.base));
+      const li = document.createElement('li');
+      li.innerHTML = `<input type="checkbox"><img alt=""><span class="pname"><b></b><small></small></span>
+        <label class="copies">Copie <input type="number" min="1" max="50"></label><button type="button">✕</button>`;
+      const [chk, copies] = li.querySelectorAll('input');
+      chk.checked = rec.checked; chk.setAttribute('aria-label', `Includi ${rec.name} nella stampa`);
+      li.querySelector('img').src = thumbs.get(rec.id);
+      li.querySelector('b').textContent = rec.name;
+      li.querySelector('small').textContent = `${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm`;
+      copies.value = rec.copies;
+      chk.onchange = () => { rec.checked = chk.checked; persist(rec); schedulePreview(); };
+      copies.onchange = () => {
+        rec.copies = Math.max(1, Math.min(50, Math.round(+copies.value || 1))); copies.value = rec.copies;
+        persist(rec); schedulePreview();
+      };
+      const del = li.querySelector('button');
+      del.setAttribute('aria-label', `Elimina ${rec.name}`);
+      del.onclick = () => {
+        saved = saved.filter(r => r !== rec);
+        URL.revokeObjectURL(thumbs.get(rec.id)); thumbs.delete(rec.id);
+        bitmaps.delete(rec.id + 'base'); bitmaps.delete(rec.id + 'grid');
+        store.del(rec.id).catch(() => {});
+        renderPrint();
+      };
+      ul.appendChild(li);
+    });
+    schedulePreview();
+  }
+
+  // ---------- A4 layout: shelf packing, tallest pieces first; base and grid sheets share it ----------
+  const MM_PER_PT = 25.4 / 72, INFO_PT = 6, INFO_LH = 2.6, INFO_PAD = 1.2; // info text ≈ 2 mm tall
+  let measureDoc = null;
+  function wrapInfo(rec) {
+    const text = rec.info.join('   ·   ');
+    if (!window.jspdf) return [text];
+    measureDoc = measureDoc || new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    measureDoc.setFont('helvetica', 'normal'); measureDoc.setFontSize(INFO_PT);
+    return measureDoc.splitTextToSize(text, rec.wMm);
+  }
+  const printOpts = () => ({
+    landscape: $('pOrient').value === 'l',
+    margin: Math.max(0, +$('pMargin').value || 0),
+    gap: Math.max(0, +$('pGap').value || 0),
+    info: $('pInfo').checked, outline: $('pOutline').checked
+  });
+
+  function computeLayout() {
+    const P = printOpts(), E = 1e-6;
+    const PW = P.landscape ? 297 : 210, PH = P.landscape ? 210 : 297;
+    const uw = PW - 2 * P.margin, uh = PH - 2 * P.margin;
+    const items = [];
+    saved.filter(r => r.checked).forEach(rec => {
+      const lines = P.info ? wrapInfo(rec) : [];
+      const band = lines.length ? lines.length * INFO_LH + INFO_PAD : 0;
+      for (let c = 0; c < rec.copies; c++) items.push({ rec, lines, band, w: rec.wMm, h: rec.hMm + band });
+    });
+    items.sort((a, b) => b.h - a.h || b.w - a.w);
+    const pages = [], tooBig = [];
+    const place = (pg, sh, it) => { pg.items.push({ ...it, x: P.margin + sh.x, y: P.margin + sh.y }); sh.x += it.w + P.gap; };
+    const newShelf = (pg, it) => { const sh = { y: pg.nextY, h: it.h, x: 0 }; pg.shelves.push(sh); pg.nextY += it.h + P.gap; place(pg, sh, it); };
+    for (const it of items) {
+      if (it.w > uw + E || it.h > uh + E) { tooBig.push(it); continue; }
+      let done = false;
+      for (const pg of pages) {
+        const sh = pg.shelves.find(s => s.x + it.w <= uw + E && it.h <= s.h + E);
+        if (sh) { place(pg, sh, it); done = true; break; }
+        if (pg.nextY + it.h <= uh + E) { newShelf(pg, it); done = true; break; }
+      }
+      if (!done) { const pg = { shelves: [], nextY: 0, items: [] }; pages.push(pg); newShelf(pg, it); }
+    }
+    return { PW, PH, P, pages, tooBig, total: items.length };
+  }
+
+  // ---------- Sheet previews ----------
+  let pdeb, previewJob = 0;
+  const schedulePreview = () => { clearTimeout(pdeb); pdeb = setTimeout(renderPreview, 150); };
+  async function bitmap(rec, kind) {
+    const k = rec.id + kind;
+    if (!bitmaps.has(k)) bitmaps.set(k, await createImageBitmap(rec[kind]));
+    return bitmaps.get(k);
+  }
+  async function drawSheet(L, pg, kind) {
+    const k = 2.4; // preview pixels per mm
+    const c = document.createElement('canvas'); c.width = Math.round(L.PW * k); c.height = Math.round(L.PH * k);
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    // printable area
+    g.setLineDash([4, 4]); g.strokeStyle = '#c9ced6'; g.lineWidth = 1;
+    g.strokeRect(L.P.margin * k, L.P.margin * k, (L.PW - 2 * L.P.margin) * k, (L.PH - 2 * L.P.margin) * k);
+    g.setLineDash([]);
+    for (const it of pg.items) {
+      const img = await bitmap(it.rec, kind), top = it.y + it.band;
+      g.drawImage(img, it.x * k, top * k, it.w * k, it.rec.hMm * k);
+      if (L.P.outline) { g.strokeStyle = '#969696'; g.strokeRect(it.x * k, top * k, it.w * k, it.rec.hMm * k); }
+      if (it.lines.length) {
+        g.fillStyle = '#000'; g.textBaseline = 'top';
+        g.font = `${INFO_PT * MM_PER_PT * k}px Helvetica, Arial, sans-serif`;
+        it.lines.forEach((l, j) => g.fillText(l, it.x * k, (it.y + j * INFO_LH) * k));
+      }
+    }
+    return c;
+  }
+  async function renderPreview() {
+    const job = ++previewJob, L = computeLayout();
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < L.pages.length; i++) {
+      const pair = document.createElement('div'); pair.className = 'sheet-pair';
+      for (const [kind, label] of [['base', 'immagini'], ['grid', 'griglie (acetato)']]) {
+        const fig = document.createElement('figure');
+        fig.appendChild(await drawSheet(L, L.pages[i], kind));
+        const cap = document.createElement('figcaption');
+        cap.textContent = `Foglio ${i + 1} · ${label}`;
+        fig.appendChild(cap); pair.appendChild(fig);
+      }
+      frag.appendChild(pair);
+    }
+    if (job !== previewJob) return; // a newer change is already being drawn
+    $('sheets').replaceChildren(frag);
+    const msg = $('printMsg');
+    const placed = L.total - L.tooBig.length;
+    let text = placed ? `${placed} ${placed === 1 ? 'pezzo' : 'pezzi'} su ${L.pages.length} ${L.pages.length === 1 ? 'foglio' : 'fogli'} per tipo.` : '';
+    if (L.tooBig.length) {
+      const names = [...new Set(L.tooBig.map(t => t.rec.name))].join(', ');
+      text += ` Non entra${L.tooBig.length > 1 ? 'no' : ''} nel foglio: ${names}. Riduci il margine o prova il foglio orizzontale.`;
+    }
+    msg.textContent = text.trim();
+    msg.classList.toggle('warn', L.tooBig.length > 0);
+    $('pdfBase').disabled = $('pdfGrid').disabled = !L.pages.length;
+  }
+  ['pOrient', 'pMargin', 'pGap', 'pInfo', 'pOutline'].forEach(id => $(id).addEventListener('change', schedulePreview));
+
+  // ---------- PDF: images placed at their real size in millimetres ----------
+  async function buildPdf(kind) {
+    const L = computeLayout();
+    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: L.P.landscape ? 'landscape' : 'portrait', compress: true });
+    const bytes = new Map();
+    for (let i = 0; i < L.pages.length; i++) {
+      if (i) doc.addPage('a4', L.P.landscape ? 'landscape' : 'portrait');
+      for (const it of L.pages[i].items) {
+        if (!bytes.has(it.rec.id)) bytes.set(it.rec.id, new Uint8Array(await it.rec[kind].arrayBuffer()));
+        const top = it.y + it.band;
+        doc.addImage(bytes.get(it.rec.id), 'PNG', it.x, top, it.w, it.rec.hMm, `${kind}-${it.rec.id}`, 'FAST');
+        if (L.P.outline) { doc.setDrawColor(150); doc.setLineWidth(0.1); doc.rect(it.x, top, it.w, it.rec.hMm); }
+        if (it.lines.length) {
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(INFO_PT); doc.setTextColor(0);
+          it.lines.forEach((l, j) => doc.text(l, it.x, it.y + j * INFO_LH, { baseline: 'top' }));
+        }
+      }
+    }
+    return doc.output('blob');
+  }
+  async function exportPdf(kind, btn) {
+    if (!window.jspdf) { $('printMsg').textContent = 'Il generatore di PDF non si è caricato: controlla la connessione e ricarica la pagina.'; return; }
+    const label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparo il PDF…';
+    try {
+      const blob = await buildPdf(kind);
+      await deliver(blob, kind === 'base' ? 'kinegram-fogli-immagini.pdf' : 'kinegram-fogli-griglie.pdf');
+    } catch (e) {
+      $('printMsg').textContent = `Non sono riuscito a creare il PDF: ${e.message || e}`;
+    } finally { btn.disabled = false; btn.textContent = label; }
+  }
+  $('pdfBase').onclick = e => exportPdf('base', e.currentTarget);
+  $('pdfGrid').onclick = e => exportPdf('grid', e.currentTarget);
+
+  // animations saved before the frame count was part of the info: measure it from the saved grid.
+  // linear: period / strip width; circular: 2π / (rays × wedge angle), with the wedge from the edge strip
+  async function framesFromGrid(rec) {
+    const img = await createImageBitmap(rec.grid), W = img.width, H = img.height;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, W, H).data, open = (x, y) => d[(y * W + x) * 4 + 3] < 128;
+    const num = re => { const m = rec.info.join(' ').match(re); return m ? +m[1] : 0; };
+    const pxPerMm = W / rec.wMm;
+    if (/al bordo/.test(rec.info.join(' '))) {
+      const strip = num(/Striscia ([\d.]+) mm/), cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 * 0.9;
+      let rays = 0, prev = null;
+      for (let i = 0; i <= 7200; i++) {
+        const a = i / 7200 * Math.PI * 2, o = open(Math.round(cx + r * Math.cos(a)), Math.round(cy + r * Math.sin(a)));
+        if (prev === false && o) rays++;
+        prev = o;
+      }
+      const alpha = strip / (Math.min(rec.wMm, rec.hMm) / 2);
+      return rays && alpha ? Math.round(Math.PI * 2 / (rays * alpha)) : 0;
+    }
+    const strip = num(/Striscia ([\d.]+) mm/) * pxPerMm;
+    const starts = (len, at) => { const s = []; for (let i = 1; i < len; i++) if (!at(i - 1) && at(i)) s.push(i); return s; };
+    let s = starts(W, x => open(x, H >> 1));
+    if (s.length < 2) s = starts(H, y => open(W >> 1, y));
+    if (s.length < 2 || !strip) return 0;
+    const period = (s[s.length - 1] - s[0]) / (s.length - 1);
+    return Math.round(period / strip);
+  }
+
+  (async () => {
+    try { saved = (await store.all()).sort((a, b) => a.created - b.created); }
+    catch { persistent = false; }
+    for (const rec of saved) {
+      if (/^\d+F$/.test(rec.info[rec.info.length - 1] || '')) continue;
+      try { const n = await framesFromGrid(rec); if (n >= 2) { rec.info = [...rec.info, `${n}F`]; persist(rec); } }
+      catch { /* leave this record as it is */ }
+    }
+    renderPrint();
+  })();
 
   // ---------- Start ----------
   S.frames = makeSample();
