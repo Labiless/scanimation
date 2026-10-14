@@ -8,6 +8,7 @@
   --bg: #ffffff;
   --ink: #000000;
   --inv: #ffffff;
+  --cta: #ffd400; /* yellow marks the main actions only, same in both themes */
   --font: "Roboto", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
 }
@@ -69,8 +70,9 @@ button, .btn {
   padding: 5px 10px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
 button:hover, .btn:hover { background: var(--ink); color: var(--inv); }
-button.primary, .btn.primary { background: var(--ink); color: var(--inv); }
-button.primary:hover, .btn.primary:hover { background: var(--bg); color: var(--ink); }
+button.primary, .btn.primary { background: var(--cta); border-color: var(--cta); color: #000; font-weight: 700; }
+button.primary:hover, .btn.primary:hover { background: #000; border-color: var(--cta); color: var(--cta); }
+button.primary:disabled:hover { background: var(--cta); color: #000; }
 button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 button:disabled { opacity: .4; cursor: not-allowed; }
 button:disabled:hover { background: var(--bg); color: var(--ink); }
@@ -136,13 +138,20 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 .spec dd { margin: 0 0 0 -10px; font-weight: 500; }
 
 /* A4 print section */
-.print-head { display: flex; flex-direction: column; gap: 4px; }
+.print-box { display: block; }
+.print-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; cursor: pointer; list-style: none; }
+.print-head::-webkit-details-marker { display: none; }
+.print-head::after { content: "+ Show"; grid-column: 2; grid-row: 1; font-size: 12px; font-weight: 700; border: 1px solid var(--ink); padding: 2px 8px; }
+.print-box[open] > .print-head::after { content: "− Hide"; }
+.print-head .note { grid-column: 1; }
+.print-head:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.print-box[open] > .print-grid { margin-top: 12px; }
 .print-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 860px) { .print-grid { grid-template-columns: minmax(0, 1fr); } }
 .print-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .print-side .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.plist li { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px; border: 1px solid var(--ink); }
+.plist li { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 4px; border: 1px solid var(--ink); }
 .plist img { width: 44px; height: 44px; object-fit: contain; background: #fff; border: 1px solid var(--ink); }
 .pname { display: flex; flex-direction: column; min-width: 0; font-size: 12px; }
 .pname b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -150,6 +159,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 .copies { display: flex; align-items: center; gap: 4px; font-size: 11px; }
 .copies input { width: 54px; padding: 3px 5px; }
 .plist li > button { padding: 2px 8px; font-size: 12px; }
+.plist li.editing { outline: 3px solid var(--cta); outline-offset: -1px; }
 .sheets { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .sheet-pair figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -161,56 +171,57 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 <div class="wrap">
   <header>
     <h1>Scanimation Studio</h1>
-    <p>Trascina la griglia sull'anteprima per muoverla a mano.</p>
+    <p>Drag the grid on the preview to move it by hand.</p>
   </header>
 
   <!-- Row 1: sources (left) · export and look (right) -->
   <div class="top">
-    <section class="panel" aria-label="Fotogrammi">
+    <section class="panel" aria-label="Frames">
       <div class="row between">
-        <div class="seg" role="group" aria-label="Origine dei fotogrammi">
-          <button type="button" id="srcImg" aria-pressed="true">Immagini</button>
-          <button type="button" id="srcGif" aria-pressed="false">GIF animata</button>
-          <button type="button" id="srcTxt" aria-pressed="false">Testo</button>
+        <div class="seg" role="group" aria-label="Frame source">
+          <button type="button" id="srcImg" aria-pressed="true">Images</button>
+          <button type="button" id="srcGif" aria-pressed="false">Animated GIF</button>
+          <button type="button" id="srcTxt" aria-pressed="false">Text</button>
         </div>
         <div class="row">
-          <button id="reverseBtn" type="button">Inverti ordine</button>
+          <button id="reverseBtn" type="button">Reverse order</button>
+          <button id="clearBtn" type="button">Delete all frames</button>
         </div>
       </div>
 
       <div class="drop" id="drop">
-        <label class="btn primary" for="fileIn">Scegli immagini…</label>
-        <span class="note">oppure trascinale qui, in ordine</span>
+        <label class="btn primary" for="fileIn">Choose images…</label>
+        <span class="note">or drop them here, in order</span>
         <input id="fileIn" type="file" accept="image/*" multiple hidden>
       </div>
 
       <div class="gifbox" id="gifBox" hidden>
         <form class="row" id="gifForm">
-          <input id="gifUrl" type="url" placeholder="https://…/animazione.gif" aria-label="Link della GIF" style="flex:1 1 180px; width:auto">
-          <button type="submit" class="primary">Carica link</button>
-          <label class="btn" for="gifFile">Scegli GIF…</label>
+          <input id="gifUrl" type="url" placeholder="https://…/animation.gif" aria-label="GIF link" style="flex:1 1 180px; width:auto">
+          <button type="submit" class="primary">Load link</button>
+          <label class="btn" for="gifFile">Choose GIF…</label>
           <input id="gifFile" type="file" accept="image/gif" hidden>
         </form>
-        <div class="drop" id="gifDrop"><span class="note">oppure trascina qui un file .gif</span></div>
-        <p class="note" id="gifStatus" role="status">Link diretti a .gif o pagine Giphy. Se il sito blocca il link, scarica la GIF e caricala come file.</p>
+        <div class="drop" id="gifDrop"><span class="note">or drop a .gif file here</span></div>
+        <p class="note" id="gifStatus" role="status">Direct links to .gif files or Giphy pages. If the site blocks the link, download the GIF and load it as a file.</p>
         <div class="gifctrl cols" id="gifCtrl" hidden>
           <div class="field">
-            <label for="gifN">Fotogrammi: <b id="gifNVal">6</b></label>
+            <label for="gifN">Frames: <b id="gifNVal">6</b></label>
             <input id="gifN" type="range" min="2" max="12" value="6">
           </div>
-          <div class="field"><label for="gifStart">Dal frame</label><input id="gifStart" type="number" min="1" value="1"></div>
-          <div class="field"><label for="gifEnd">Al frame</label><input id="gifEnd" type="number" min="1" value="1"></div>
+          <div class="field"><label for="gifStart">From frame</label><input id="gifStart" type="number" min="1" value="1"></div>
+          <div class="field"><label for="gifEnd">To frame</label><input id="gifEnd" type="number" min="1" value="1"></div>
         </div>
       </div>
 
       <div class="gifbox" id="textBox" hidden>
         <div class="cols">
           <div class="field" style="grid-column: span 2">
-            <label for="txt">Testo (Invio per andare a capo)</label>
-            <textarea id="txt" rows="1">CIAO</textarea>
+            <label for="txt">Text (Enter for a new line)</label>
+            <textarea id="txt" rows="1">HELLO</textarea>
           </div>
           <div class="field">
-            <label for="txtFont">Carattere</label>
+            <label for="txtFont">Typeface</label>
             <select id="txtFont">
               <option value="0">Anton</option>
               <option value="1" selected>Archivo Black</option>
@@ -221,78 +232,83 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
             </select>
           </div>
           <div class="field">
-            <label for="txtAnim">Animazione</label>
+            <label for="txtAnim">Animation</label>
             <select id="txtAnim">
-              <option value="ry">Rotazione Y (porta)</option>
-              <option value="rx">Rotazione X (ribalta)</option>
-              <option value="rz">Rotazione Z (piano)</option>
-              <option value="ltr">Lettere da sinistra</option>
-              <option value="rtl">Lettere da destra</option>
+              <option value="ry">Rotate Y (door)</option>
+              <option value="rx">Rotate X (flip)</option>
+              <option value="rz">Rotate Z (spin)</option>
+              <option value="ltr">Letters from the left</option>
+              <option value="rtl">Letters from the right</option>
             </select>
           </div>
           <div class="field" id="txtAngleField">
-            <label for="txtAngle">Ampiezza: <b id="txtAngleVal">360°</b></label>
+            <label for="txtAngle">Range: <b id="txtAngleVal">360°</b></label>
             <input id="txtAngle" type="range" min="15" max="360" step="15" value="360">
           </div>
           <div class="field" id="txtPerspField">
-            <label for="txtPersp">Prospettiva: <b id="txtPerspVal">40%</b></label>
+            <label for="txtPersp">Perspective: <b id="txtPerspVal">40%</b></label>
             <input id="txtPersp" type="range" min="0" max="100" step="5" value="40">
           </div>
           <div class="field">
-            <label for="txtN">Fotogrammi: <b id="txtNVal">6</b></label>
+            <label for="txtN">Frames: <b id="txtNVal">6</b></label>
             <input id="txtN" type="range" min="2" max="12" value="6">
           </div>
         </div>
-        <p class="note" id="txtNote">Sotto i 360° usa il ciclo "Andata e ritorno" per farla oscillare.</p>
+        <p class="note" id="txtNote">Below 360°, use the "Back and forth" loop to make it swing.</p>
       </div>
 
-      <ul class="frames" id="frameList" aria-label="Fotogrammi in ordine"></ul>
+      <ul class="frames" id="frameList" aria-label="Frames in order"></ul>
     </section>
 
     <div class="right">
-      <section class="panel actions" aria-label="Esporta e salva">
+      <section class="panel actions" aria-label="Export and save">
         <div class="row">
-          <button id="saveGrid" type="button">Scarica griglia (PNG trasparente)</button>
-          <button id="saveBase" type="button">Scarica immagine base (PNG)</button>
+          <button id="saveGrid" type="button" class="primary">Download grid (transparent PNG)</button>
+          <button id="saveBase" type="button" class="primary">Download base image (PNG)</button>
         </div>
-        <label class="lbl"><input id="infoBand" type="checkbox" checked>Aggiungi sopra l'immagine una riga con le impostazioni</label>
+        <label class="lbl"><input id="infoBand" type="checkbox" checked>Add a line with the settings above the image</label>
         <div class="row">
-          <input id="animName" type="text" placeholder="Nome (facoltativo)" aria-label="Nome dell'animazione" style="flex:1 1 140px; width:auto">
-          <button id="saveAnim" type="button" class="primary">Salva per la stampa</button>
+          <input id="animName" type="text" placeholder="Name (optional)" aria-label="Animation name" style="flex:1 1 140px; width:auto">
+          <button id="saveAnim" type="button" class="primary">Save for printing</button>
+          <button id="saveAsNew" type="button" hidden>Save as new</button>
+        </div>
+        <div class="row" id="editNote" hidden>
+          <span class="note">Editing <b id="editName"></b>: "Update" overwrites the saved one.</span>
+          <button id="stopEdit" type="button">Stop editing</button>
         </div>
         <p class="note" id="saveMsg" role="status"></p>
         <div class="exports" id="exports" hidden></div>
       </section>
 
       <div class="looks">
-        <section class="panel" aria-label="Colore">
+        <section class="panel" aria-label="Colour">
           <div class="row">
-            <span class="lbl">Colore</span>
-            <div class="seg" role="group" aria-label="Colore">
+            <span class="lbl">Colour</span>
+            <div class="seg" role="group" aria-label="Colour">
               <button type="button" id="modeSil" aria-pressed="true">Silhouette</button>
-              <button type="button" id="modePost" aria-pressed="false">Posterizza</button>
-              <button type="button" id="modeOrig" aria-pressed="false">Originale</button>
+              <button type="button" id="modePost" aria-pressed="false">Posterize</button>
+              <button type="button" id="modeOrig" aria-pressed="false">Original</button>
             </div>
           </div>
           <div class="field" id="threshField">
-            <label for="thresh">Soglia silhouette: <b id="threshVal">140</b></label>
+            <label for="thresh">Silhouette threshold: <b id="threshVal">140</b></label>
             <input id="thresh" type="range" min="10" max="245" value="140">
           </div>
           <div class="field" id="postField" hidden>
-            <label for="levels">Livelli per colore: <b id="levelsVal">3</b></label>
+            <label for="levels">Levels per channel: <b id="levelsVal">3</b></label>
             <input id="levels" type="range" min="2" max="8" value="3">
-            <label class="lbl"><input id="gray" type="checkbox" checked>Toni di grigio</label>
+            <label class="lbl"><input id="gray" type="checkbox" checked>Greyscale</label>
           </div>
-          <label class="lbl"><input id="invert" type="checkbox">Inverti bianco e nero</label>
+          <label class="lbl"><input id="invert" type="checkbox">Invert black and white</label>
         </section>
 
-        <section class="panel" aria-label="Riempimento e sfocatura">
+        <section class="panel" aria-label="Fill and blur">
           <div class="row" id="fillField">
-            <input id="fill" type="color" value="#000000" aria-label="Colore di riempimento">
-            <label class="lbl" for="fill">Colore di riempimento <b id="fillVal">#000000</b></label>
+            <input id="fill" type="color" value="#000000" aria-label="Fill colour">
+            <label class="lbl" for="fill">Fill colour <b id="fillVal">#000000</b></label>
           </div>
           <div class="field">
-            <label for="blur">Sfocatura bordi: <b id="blurVal">0 px</b></label>
+            <label for="blur">Edge blur: <b id="blurVal">0 px</b></label>
             <input id="blur" type="range" min="0" max="12" step="0.5" value="0">
           </div>
         </section>
@@ -302,40 +318,40 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 
   <!-- Row 2: animation timing · format · size · grid -->
   <div class="mid">
-    <section class="panel" aria-label="Ciclo e apertura">
+    <section class="panel" aria-label="Loop and aperture">
       <div class="row">
-        <span class="lbl">Ciclo</span>
-        <div class="seg" role="group" aria-label="Ciclo dell'animazione">
-          <button type="button" id="loopOn" aria-pressed="true">Continuo</button>
-          <button type="button" id="loopOff" aria-pressed="false">Andata e ritorno</button>
+        <span class="lbl">Loop</span>
+        <div class="seg" role="group" aria-label="Animation loop">
+          <button type="button" id="loopOn" aria-pressed="true">Continuous</button>
+          <button type="button" id="loopOff" aria-pressed="false">Back and forth</button>
         </div>
       </div>
-      <div class="field" title="Sotto il 100% l'immagine è più nitida ma più scura; sopra il 100% è più luminosa ma i fotogrammi vicini si mescolano.">
-        <label for="aperture">Apertura fessura: <b id="apertureVal">100%</b></label>
+      <div class="field" title="Below 100% the image is sharper but darker; above 100% it is brighter but neighbouring frames blend.">
+        <label for="aperture">Slit aperture: <b id="apertureVal">100%</b></label>
         <input id="aperture" type="range" min="25" max="200" step="5" value="100">
       </div>
     </section>
 
     <section class="panel" aria-labelledby="h-size">
-      <h2 id="h-size">Formato di stampa</h2>
+      <h2 id="h-size">Print format</h2>
       <div class="cols2">
         <div class="field">
-          <label for="ratio">Proporzioni</label>
+          <label for="ratio">Aspect ratio</label>
           <select id="ratio">
-            <option value="1" selected>1:1 quadrato</option>
-            <option value="1.3333">4:3 orizzontale</option>
-            <option value="1.5">3:2 orizzontale</option>
-            <option value="1.7778">16:9 orizzontale</option>
-            <option value="2">2:1 orizzontale</option>
-            <option value="3">3:1 striscia</option>
-            <option value="0.75">3:4 verticale</option>
-            <option value="0.6667">2:3 verticale</option>
-            <option value="0.5">1:2 verticale</option>
-            <option value="free">Libere</option>
+            <option value="1" selected>1:1 square</option>
+            <option value="1.3333">4:3 landscape</option>
+            <option value="1.5">3:2 landscape</option>
+            <option value="1.7778">16:9 landscape</option>
+            <option value="2">2:1 landscape</option>
+            <option value="3">3:1 strip</option>
+            <option value="0.75">3:4 portrait</option>
+            <option value="0.6667">2:3 portrait</option>
+            <option value="0.5">1:2 portrait</option>
+            <option value="free">Free</option>
           </select>
         </div>
         <div class="field">
-          <label for="dpi">Risoluzione (dpi)</label>
+          <label for="dpi">Resolution (dpi)</label>
           <select id="dpi">
             <option value="150">150</option>
             <option value="300" selected>300</option>
@@ -344,97 +360,97 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
           </select>
         </div>
       </div>
-      <p class="note">I PNG contengono i dpi: stampati al 100% escono della misura indicata.</p>
+      <p class="note">PNGs carry the dpi: printed at 100% they come out at the size shown.</p>
     </section>
 
-    <section class="panel" aria-label="Dimensioni">
+    <section class="panel" aria-label="Size">
       <div class="cols2">
-        <div class="field"><label for="wPx">Larghezza (px)</label><input id="wPx" type="number" min="100" max="5000" value="800"></div>
-        <div class="field"><label for="wMm">Larghezza (mm)</label><input id="wMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
-        <div class="field"><label for="hPx">Altezza (px)</label><input id="hPx" type="number" min="100" max="5000" value="800"></div>
-        <div class="field"><label for="hMm">Altezza (mm)</label><input id="hMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
+        <div class="field"><label for="wPx">Width (px)</label><input id="wPx" type="number" min="100" max="5000" value="800"></div>
+        <div class="field"><label for="wMm">Width (mm)</label><input id="wMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
+        <div class="field"><label for="hPx">Height (px)</label><input id="hPx" type="number" min="100" max="5000" value="800"></div>
+        <div class="field"><label for="hMm">Height (mm)</label><input id="hMm" type="number" min="5" max="1000" step="0.1" value="67.73"></div>
       </div>
       <div class="field">
-        <label for="figScale">Dimensione figura: <b id="figScaleVal">100%</b></label>
+        <label for="figScale">Figure size: <b id="figScaleVal">100%</b></label>
         <input id="figScale" type="range" min="10" max="100" step="5" value="100">
       </div>
     </section>
 
     <section class="panel" aria-labelledby="h-grid">
-      <h2 id="h-grid">Griglia</h2>
+      <h2 id="h-grid">Grid</h2>
       <div class="row">
-        <span class="lbl">Movimento</span>
-        <div class="seg" role="group" aria-label="Movimento della griglia">
-          <button type="button" id="oriV" aria-pressed="true">Verticale</button>
-          <button type="button" id="oriH" aria-pressed="false">Orizzontale</button>
-          <button type="button" id="oriR" aria-pressed="false">Circolare</button>
+        <span class="lbl">Motion</span>
+        <div class="seg" role="group" aria-label="Grid motion">
+          <button type="button" id="oriV" aria-pressed="true">Vertical</button>
+          <button type="button" id="oriH" aria-pressed="false">Horizontal</button>
+          <button type="button" id="oriR" aria-pressed="false">Circular</button>
         </div>
       </div>
       <div class="field" id="slitField">
-        <label for="slit">Larghezza striscia: <b id="slitVal">4 px</b></label>
+        <label for="slit">Strip width: <b id="slitVal">4 px</b></label>
         <input id="slit" type="range" min="1" max="24" value="4">
       </div>
       <div class="field" id="raysField" hidden>
-        <label for="rays">Numero di raggi: <b id="raysVal">48</b></label>
+        <label for="rays">Number of rays: <b id="raysVal">48</b></label>
         <input id="rays" type="range" min="6" max="240" value="48">
       </div>
-      <p class="note" id="radialNote" hidden>Verso il centro le fessure si stringono: tieni i soggetti verso l'esterno.</p>
+      <p class="note" id="radialNote" hidden>Slits narrow towards the centre: keep subjects towards the outside.</p>
     </section>
   </div>
 
   <!-- Row 3: live preview -->
-  <section class="panel stage-panel" aria-label="Anteprima">
-    <div class="stage fit" id="stage"><canvas id="view" aria-label="Anteprima animazione"></canvas></div>
+  <section class="panel stage-panel" aria-label="Preview">
+    <div class="stage fit" id="stage"><canvas id="view" aria-label="Animation preview"></canvas></div>
     <div class="toolbar">
-      <button id="playBtn" type="button" class="primary">Pausa</button>
-      <button id="stepBtn" type="button">Fotogramma successivo</button>
-      <div class="seg" role="group" aria-label="Vista">
-        <button type="button" id="viewGrid" aria-pressed="true">Con griglia</button>
-        <button type="button" id="viewBase" aria-pressed="false">Solo base</button>
+      <button id="playBtn" type="button">Pause</button>
+      <button id="stepBtn" type="button">Next frame</button>
+      <div class="seg" role="group" aria-label="View">
+        <button type="button" id="viewGrid" aria-pressed="true">With grid</button>
+        <button type="button" id="viewBase" aria-pressed="false">Base only</button>
       </div>
       <select id="zoom" aria-label="Zoom">
-        <option value="fit">Adatta</option>
+        <option value="fit">Fit</option>
         <option value="1">100%</option>
         <option value="2">200%</option>
       </select>
       <div class="speed">
-        <label for="speed">Velocità griglia: <b id="speedVal">30 px/s</b></label>
+        <label for="speed">Grid speed: <b id="speedVal">30 px/s</b></label>
         <input id="speed" type="range" min="2" max="200" value="30">
       </div>
     </div>
     <div class="readout" id="readout"></div>
-    <dl class="spec" id="spec" aria-label="Misure"></dl>
+    <dl class="spec" id="spec" aria-label="Measurements"></dl>
   </section>
 
-  <section class="panel" id="stampa" aria-labelledby="h-sheet">
-    <div class="print-head">
-      <h2 id="h-sheet">Stampa su A4</h2>
-      <p class="note">Le animazioni salvate vengono disposte in automatico su due serie di fogli con lo stesso schema: una con le immagini, una con le griglie da stampare su acetato. Ogni pezzo ha la misura reale impostata.</p>
-    </div>
+  <details class="panel print-box" id="printBox" open>
+    <summary class="print-head">
+      <h2 id="h-sheet">Print on A4</h2>
+      <span class="note">Saved animations are laid out automatically on two matching sets of sheets: one with the images, one with the grids to print on acetate. Every piece keeps its real size.</span>
+    </summary>
     <div class="print-grid">
       <div class="print-side">
         <ul class="plist" id="printList"></ul>
-        <p class="note" id="printEmpty">Nessuna animazione salvata. Prepara un'animazione e premi "Salva per la stampa" in alto.</p>
-        <p class="note" id="storeNote" hidden>Questo browser non permette di conservare le animazioni: restano disponibili finché la pagina è aperta.</p>
+        <p class="note" id="printEmpty">No saved animations yet. Set one up and press "Save for printing" at the top.</p>
+        <p class="note" id="storeNote" hidden>This browser can't keep animations: they stay available while the page is open.</p>
         <div class="cols3">
-          <div class="field"><label for="pOrient">Foglio</label>
-            <select id="pOrient"><option value="p">A4 verticale</option><option value="l">A4 orizzontale</option></select>
+          <div class="field"><label for="pOrient">Sheet</label>
+            <select id="pOrient"><option value="p">A4 portrait</option><option value="l">A4 landscape</option></select>
           </div>
-          <div class="field"><label for="pMargin">Margine (mm)</label><input id="pMargin" type="number" min="0" max="40" step="1" value="10"></div>
-          <div class="field"><label for="pGap">Spazio (mm)</label><input id="pGap" type="number" min="0" max="30" step="1" value="5"></div>
+          <div class="field"><label for="pMargin">Margin (mm)</label><input id="pMargin" type="number" min="0" max="40" step="1" value="10"></div>
+          <div class="field"><label for="pGap">Gap (mm)</label><input id="pGap" type="number" min="0" max="30" step="1" value="5"></div>
         </div>
-        <label class="lbl"><input id="pInfo" type="checkbox" checked>Stampa le impostazioni sopra ogni pezzo</label>
-        <label class="lbl"><input id="pOutline" type="checkbox" checked>Bordo sottile per il taglio</label>
+        <label class="lbl"><input id="pInfo" type="checkbox" checked>Print the settings above each piece</label>
+        <label class="lbl"><input id="pOutline" type="checkbox" checked>Thin cutting outline</label>
         <div class="row">
-          <button id="pdfBase" type="button" class="primary">Scarica PDF immagini</button>
-          <button id="pdfGrid" type="button">Scarica PDF griglie</button>
+          <button id="pdfBase" type="button" class="primary">Download images PDF</button>
+          <button id="pdfGrid" type="button" class="primary">Download grids PDF</button>
         </div>
         <p class="note" id="printMsg" role="status"></p>
-        <p class="note">Stampa i PDF al 100% ("Dimensioni effettive"), senza adattarli alla pagina.</p>
+        <p class="note">Print the PDFs at 100% ("Actual size"), without fitting them to the page.</p>
       </div>
       <div class="sheets" id="sheets"></div>
     </div>
-  </section>
+  </details>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.js"></script>
@@ -450,8 +466,9 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     outW: 800, outH: 800, dpi: 300, lockMm: false, ratio: 1, figScale: 1,
     mode: 'sil', thresh: 140, invert: false, fill: '#000000', blur: 0, levels: 3, gray: true,
     gif: null, gifN: 6, gifStart: 1, gifEnd: 1,
-    text: { str: 'CIAO', font: 1, anim: 'ry', angle: 360, persp: 40, n: 6 },
-    speed: 30, rspeed: 6, playing: !reduced, offset: 0, angle: 0, showGrid: true
+    text: { str: 'HELLO', font: 1, anim: 'ry', angle: 360, persp: 40, n: 6 },
+    speed: 30, rspeed: 6, playing: !reduced, offset: 0, angle: 0, showGrid: true,
+    editingId: null, editingName: ''
   };
   // frame order in the strips: 1..N for a loop, 1..N..2 for back-and-forth
   const order = () => {
@@ -481,15 +498,17 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = f.name; nm.title = f.name; li.appendChild(nm);
       const acts = document.createElement('span'); acts.className = 'acts';
       acts.append(
-        mkBtn('←', `Sposta a sinistra il fotogramma ${i + 1}`, i === 0, () => move(i, -1)),
-        mkBtn('→', `Sposta a destra il fotogramma ${i + 1}`, i === S.frames.length - 1, () => move(i, 1)),
-        mkBtn('✕', `Rimuovi il fotogramma ${i + 1}`, false, () => { S.frames.splice(i, 1); changed(); })
+        mkBtn('←', `Move frame ${i + 1} left`, i === 0, () => move(i, -1)),
+        mkBtn('→', `Move frame ${i + 1} right`, i === S.frames.length - 1, () => move(i, 1)),
+        mkBtn('✕', `Remove frame ${i + 1}`, false, () => { S.frames.splice(i, 1); changed(); })
       );
       li.appendChild(acts); ul.appendChild(li);
     });
+    $('clearBtn').disabled = !S.frames.length;
+    $('reverseBtn').disabled = S.frames.length < 2;
     if (!S.frames.length) {
       const li = document.createElement('li'); li.className = 'empty';
-      li.textContent = 'Nessun fotogramma: carica delle immagini, una GIF o scrivi un testo.';
+      li.textContent = 'No frames yet: load images, a GIF or type some text.';
       ul.appendChild(li);
     }
   }
@@ -547,7 +566,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       for (let i = 0; i < n; i++) {
         const k = Math.max(1, Math.round((i + 1) * letters.length / n));
         const [c, g] = blank(); drawChars(g, letters.slice(0, k));
-        frames.push({ name: `testo ${i + 1}: ${k} lettere`, src: c });
+        frames.push({ name: `text ${i + 1}: ${k} letters`, src: c });
       }
     } else {
       const [src, sg] = blank(); drawChars(sg, chars);
@@ -569,7 +588,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
             else g.drawImage(src, 0, u, TS, 1, mid - mid * s, lo, TS * s, len);
           }
         }
-        frames.push({ name: `testo ${i + 1}: ${Math.round(th * 180 / Math.PI)}°`, src: c });
+        frames.push({ name: `text ${i + 1}: ${Math.round(th * 180 / Math.PI)}°`, src: c });
       }
     }
     S.frames = frames;
@@ -582,8 +601,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   };
 
   function decodeGif(bytes, name) {
-    if (typeof GifReader === 'undefined') throw new Error('Il lettore di GIF non si è caricato: controlla la connessione e ricarica la pagina.');
-    if (String.fromCharCode(...bytes.subarray(0, 4)) !== 'GIF8') throw new Error('Il file non è una GIF. Se il link porta a un video o a una pagina web, usa il link diretto al file .gif.');
+    if (typeof GifReader === 'undefined') throw new Error('The GIF reader did not load: check your connection and reload the page.');
+    if (String.fromCharCode(...bytes.subarray(0, 4)) !== 'GIF8') throw new Error('This file is not a GIF. If the link points to a video or a web page, use the direct link to the .gif file.');
     const r = new GifReader(bytes), W = r.width, H = r.height;
     const total = Math.min(r.numFrames(), 300);
     const pixels = new Uint8ClampedArray(W * H * 4);
@@ -623,7 +642,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     $('gifStart').value = S.gifStart; $('gifEnd').value = S.gifEnd;
     $('gifN').max = Math.max(2, Math.min(S.gifEnd - S.gifStart + 1, 24)); $('gifN').value = S.gifN; $('gifNVal').textContent = S.gifN;
     $('gifCtrl').hidden = false;
-    const cut = g.total > len ? ` (usati i primi ${len})` : '';
+    const cut = g.total > len ? ` (first ${len} used)` : '';
     setGifStatus(`${g.name}: ${g.total} frame${cut}, ${g.W}×${g.H} px.`);
   }
 
@@ -635,7 +654,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     $('gifN').max = Math.max(2, Math.min(span, 24)); $('gifN').value = n; $('gifNVal').textContent = n;
     S.frames = [...Array(n).keys()].map(i => {
       const k = S.gifStart - 1 + Math.floor(i * span / n);
-      return { name: `frame ${k + 1} di ${g.total}`, src: g.frames[k] };
+      return { name: `frame ${k + 1} of ${g.total}`, src: g.frames[k] };
     });
     changed();
   }
@@ -649,15 +668,15 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 
   async function loadGifUrl(raw) {
     const url = directGifUrl(raw);
-    if (!/^https?:\/\//i.test(url)) { setGifStatus('Inserisci un link che inizi con https://', true); return; }
-    setGifStatus('Scarico la GIF…');
+    if (!/^https?:\/\//i.test(url)) { setGifStatus('Enter a link starting with https://', true); return; }
+    setGifStatus('Downloading the GIF…');
     let buf;
     try {
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`il sito ha risposto con errore ${res.status}`);
+      if (!res.ok) throw new Error(`the site answered with error ${res.status}`);
       buf = new Uint8Array(await res.arrayBuffer());
     } catch (err) {
-      setGifStatus(`Non riesco a scaricare la GIF da questo link (${err.message || 'collegamento bloccato'}). Molti siti non permettono il download da altre pagine: salva la GIF sul computer e caricala come file.`, true);
+      setGifStatus(`Can't download the GIF from this link (${err.message || 'link blocked'}). Many sites don't allow downloads from other pages: save the GIF to your computer and load it as a file.`, true);
       return;
     }
     try { useGif(decodeGif(buf, url.split('/').pop().split('?')[0] || 'GIF')); }
@@ -665,7 +684,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   }
 
   async function loadGifFile(file) {
-    setGifStatus('Leggo la GIF…');
+    setGifStatus('Reading the GIF…');
     try { useGif(decodeGif(new Uint8Array(await file.arrayBuffer()), file.name)); }
     catch (err) { setGifStatus(err.message, true); }
   }
@@ -801,7 +820,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     vctx.fillStyle = '#fff'; vctx.fillRect(0, 0, view.width, view.height);
     if (N < 2) {
       vctx.fillStyle = '#000'; vctx.font = `${Math.round(Math.min(view.width, view.height) / 28)}px Roboto, Arial, sans-serif`; vctx.textAlign = 'center';
-      vctx.fillText(S.frames.length ? 'Servono almeno 2 fotogrammi' : 'Carica delle immagini, una GIF o scrivi un testo', view.width / 2, view.height / 2);
+      vctx.fillText(S.frames.length ? 'At least 2 frames are needed' : 'Load images, a GIF or type some text', view.width / 2, view.height / 2);
       $('readout').textContent = '';
     } else if (S.radial) {
       vctx.drawImage(baseCv, 0, 0);
@@ -814,7 +833,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         vctx.restore();
       }
       const cur = Math.floor(m / alpha + 1e-9) % N, deg = r => (r * 180 / Math.PI).toFixed(2);
-      $('readout').innerHTML = `Fotogramma visibile <b>${cur + 1}</b> / ${N} · rotazione griglia <b>${deg(m)}°</b> su un periodo di ${deg(per)}°`;
+      $('readout').innerHTML = `Visible frame <b>${cur + 1}</b> / ${N} · grid rotation <b>${deg(m)}°</b> over a period of ${deg(per)}°`;
     } else {
       vctx.drawImage(baseCv, 0, 0);
       const m = ((S.offset % P) + P) % P;
@@ -822,7 +841,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         if (S.vertical) vctx.drawImage(gridCv, m - P, 0); else vctx.drawImage(gridCv, 0, m - P);
       }
       const cur = Math.floor(m / S.w) % N;
-      $('readout').innerHTML = `Fotogramma visibile <b>${cur + 1}</b> / ${N} · spostamento griglia <b>${m.toFixed(1).padStart(5, ' ')}</b> px su un periodo di ${P} px`;
+      $('readout').innerHTML = `Visible frame <b>${cur + 1}</b> / ${N} · grid offset <b>${m.toFixed(1).padStart(5, ' ')}</b> px over a period of ${P} px`;
     }
     requestAnimationFrame(tick);
   }
@@ -853,35 +872,35 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     syncAperture();
     const N = count(), mm = pxToMm, n0 = S.frames.length;
     const P = N * S.w;
-    const framesTxt = N === n0 ? `${N}` : `${N} nel ciclo (${n0} caricati, andata e ritorno)`;
+    const framesTxt = N === n0 ? `${N}` : `${N} in the loop (${n0} loaded, back and forth)`;
     // share of the image that shows through the grid, and how many frames mix in each slit
     const lum = n => {
       const pct = Math.min(100, S.aperture / Math.max(n, 1) * 100);
-      return `${pct.toFixed(0)}% dell'immagine visibile${S.aperture > 1 ? ' · fotogrammi sovrapposti' : ''}`;
+      return `${pct.toFixed(0)}% of the image visible${S.aperture > 1 ? ' · frames overlap' : ''}`;
     };
     if (S.radial) {
       const alpha = Math.PI * 2 / (S.rays * Math.max(N, 1)), deg = alpha * 180 / Math.PI;
       const rEdge = Math.min(S.outW, S.outH) / 2;
       $('spec').innerHTML = `
-        <dt>Fotogrammi</dt><dd>${framesTxt}</dd>
-        <dt>Raggi</dt><dd>${S.rays}</dd>
-        <dt>Spicchio</dt><dd>${deg.toFixed(3)}°</dd>
-        <dt>Fessura</dt><dd>${(deg * S.aperture).toFixed(3)}°</dd>
-        <dt>Periodo</dt><dd>${(deg * N).toFixed(3)}°</dd>
-        <dt>Al bordo</dt><dd>${mm(rEdge * alpha * S.aperture).toFixed(2)} mm di fessura</dd>
-        <dt>A metà raggio</dt><dd>${mm(rEdge / 2 * alpha * S.aperture).toFixed(2)} mm di fessura</dd>
-        <dt>Luminosità</dt><dd>${lum(N)}</dd>
-        <dt>Formato</dt><dd>${(mm(S.outW) / 10).toFixed(1)} × ${(mm(S.outH) / 10).toFixed(1)} cm</dd>`;
+        <dt>Frames</dt><dd>${framesTxt}</dd>
+        <dt>Rays</dt><dd>${S.rays}</dd>
+        <dt>Wedge</dt><dd>${deg.toFixed(3)}°</dd>
+        <dt>Slit</dt><dd>${(deg * S.aperture).toFixed(3)}°</dd>
+        <dt>Period</dt><dd>${(deg * N).toFixed(3)}°</dd>
+        <dt>At the edge</dt><dd>${mm(rEdge * alpha * S.aperture).toFixed(2)} mm slit</dd>
+        <dt>At half radius</dt><dd>${mm(rEdge / 2 * alpha * S.aperture).toFixed(2)} mm slit</dd>
+        <dt>Brightness</dt><dd>${lum(N)}</dd>
+        <dt>Format</dt><dd>${(mm(S.outW) / 10).toFixed(1)} × ${(mm(S.outH) / 10).toFixed(1)} cm</dd>`;
       return;
     }
     $('spec').innerHTML = `
-      <dt>Fotogrammi</dt><dd>${framesTxt}</dd>
-      <dt>Striscia</dt><dd>${S.w} px = ${mm(S.w).toFixed(2)} mm</dd>
-      <dt>Fessura</dt><dd>${+(S.w * S.aperture).toFixed(2)} px = ${mm(S.w * S.aperture).toFixed(2)} mm</dd>
-      <dt>Barra nera</dt><dd>${+Math.max(0, P - S.w * S.aperture).toFixed(2)} px = ${mm(Math.max(0, P - S.w * S.aperture)).toFixed(2)} mm</dd>
-      <dt>Periodo</dt><dd>${P} px = ${mm(P).toFixed(2)} mm</dd>
-      <dt>Luminosità</dt><dd>${lum(N)}</dd>
-      <dt>Formato</dt><dd>${(mm(S.outW) / 10).toFixed(1)} × ${(mm(S.outH) / 10).toFixed(1)} cm</dd>`;
+      <dt>Frames</dt><dd>${framesTxt}</dd>
+      <dt>Strip</dt><dd>${S.w} px = ${mm(S.w).toFixed(2)} mm</dd>
+      <dt>Slit</dt><dd>${+(S.w * S.aperture).toFixed(2)} px = ${mm(S.w * S.aperture).toFixed(2)} mm</dd>
+      <dt>Black bar</dt><dd>${+Math.max(0, P - S.w * S.aperture).toFixed(2)} px = ${mm(Math.max(0, P - S.w * S.aperture)).toFixed(2)} mm</dd>
+      <dt>Period</dt><dd>${P} px = ${mm(P).toFixed(2)} mm</dd>
+      <dt>Brightness</dt><dd>${lum(N)}</dd>
+      <dt>Format</dt><dd>${(mm(S.outW) / 10).toFixed(1)} × ${(mm(S.outH) / 10).toFixed(1)} cm</dd>`;
   }
 
   // ---------- Export ----------
@@ -933,8 +952,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       if (!fig) { fig = document.createElement('figure'); fig.dataset.f = filename; box.appendChild(fig); }
       if (fig.dataset.url) URL.revokeObjectURL(fig.dataset.url);
       fig.dataset.url = url;
-      fig.innerHTML = `<div class="fig-head"><span>${caption}</span><button type="button" class="fig-close" aria-label="Chiudi l'anteprima di ${caption}">✕ Chiudi</button></div>
-        <img alt="${caption}" src="${url}"><figcaption>Se il download non parte, salva l'immagine con clic destro (o tieni premuto).</figcaption>`;
+      fig.innerHTML = `<div class="fig-head"><span>${caption}</span><button type="button" class="fig-close" aria-label="Close the ${caption} preview">✕ Close</button></div>
+        <img alt="${caption}" src="${url}"><figcaption>If the download doesn't start, right-click (or long-press) the image to save it.</figcaption>`;
       fig.querySelector('.fig-close').onclick = () => {
         URL.revokeObjectURL(fig.dataset.url);
         fig.remove();
@@ -947,13 +966,13 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   // settings printed above the image, so a sheet can be matched to its configuration later
   function infoSegments() {
     const mm = px => pxToMm(px).toFixed(2);
-    const seg = [`Dimensioni ${pxToMm(S.outW).toFixed(1)} × ${pxToMm(S.outH).toFixed(1)} mm`];
+    const seg = [`Size ${pxToMm(S.outW).toFixed(1)} × ${pxToMm(S.outH).toFixed(1)} mm`];
     if (S.radial) {
       // wedges widen outwards, so quote them at the edge of the circle
       const strip = Math.min(S.outW, S.outH) / 2 * alphaOf();
-      seg.push(`Striscia ${mm(strip)} mm al bordo`, `Apertura ${mm(strip * S.aperture)} mm al bordo`);
+      seg.push(`Strip ${mm(strip)} mm at edge`, `Aperture ${mm(strip * S.aperture)} mm at edge`);
     } else {
-      seg.push(`Striscia ${mm(S.w)} mm`, `Apertura ${mm(S.w * S.aperture)} mm`);
+      seg.push(`Strip ${mm(S.w)} mm`, `Aperture ${mm(S.w * S.aperture)} mm`);
     }
     seg.push(`${count()}F`);
     return seg;
@@ -987,11 +1006,11 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     return out;
   }
 
-  $('saveBase').onclick = () => { if (S.frames.length >= 2) save(withInfo(baseCv, 'BASE', false), `scanimation-base-${sizeTag()}.png`, 'Immagine base'); };
+  $('saveBase').onclick = () => { if (S.frames.length >= 2) save(withInfo(baseCv, 'BASE', false), `scanimation-base-${sizeTag()}.png`, 'Base image'); };
   $('saveGrid').onclick = () => {
     if (S.frames.length < 2) return;
     const c = gridCanvas();
-    save(withInfo(c, 'GRIGLIA', true), `scanimation-griglia-${sizeTag()}.png`, 'Griglia');
+    save(withInfo(c, 'GRID', true), `scanimation-grid-${sizeTag()}.png`, 'Grid');
   };
 
   // ---------- Controls ----------
@@ -1025,7 +1044,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   function syncAperture() {
     const pct = Math.round(S.aperture * 100), n = Math.max(count(), 1);
     const px = S.radial ? Math.min(S.outW, S.outH) / 2 * (Math.PI * 2 / (S.rays * n)) * S.aperture : S.w * S.aperture;
-    $('apertureVal').textContent = `${pct}% ≈ ${pxToMm(px).toFixed(2)} mm${S.radial ? ' al bordo' : ''}`;
+    $('apertureVal').textContent = `${pct}% ≈ ${pxToMm(px).toFixed(2)} mm${S.radial ? ' at edge' : ''}`;
   }
   $('aperture').oninput = e => { S.aperture = +e.target.value / 100; syncAperture(); later(); };
   $('rays').oninput = e => { S.rays = +e.target.value; $('raysVal').textContent = S.rays; later(); };
@@ -1070,7 +1089,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   $('thresh').oninput = e => { S.thresh = +e.target.value; $('threshVal').textContent = S.thresh; later(); };
   $('invert').onchange = e => { S.invert = e.target.checked; rebuild(); };
 
-  const syncPlay = () => { $('playBtn').textContent = S.playing ? 'Pausa' : 'Avvia'; };
+  const syncPlay = () => { $('playBtn').textContent = S.playing ? 'Pause' : 'Play'; };
   $('playBtn').onclick = () => { S.playing = !S.playing; syncPlay(); };
   $('stepBtn').onclick = () => {
     S.playing = false; syncPlay();
@@ -1132,6 +1151,20 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
   $('gifEnd').onchange = clampRange;
 
   $('reverseBtn').onclick = () => { S.frames.reverse(); changed(); };
+  // two-step delete: the first click arms the button, a second click within 3 s clears the frames
+  let clearArmed = null;
+  $('clearBtn').onclick = () => {
+    const b = $('clearBtn');
+    if (!clearArmed) {
+      b.textContent = 'Click again to delete'; b.classList.add('primary');
+      clearArmed = setTimeout(() => { clearArmed = null; b.textContent = 'Delete all frames'; b.classList.remove('primary'); }, 3000);
+      return;
+    }
+    clearTimeout(clearArmed); clearArmed = null;
+    b.textContent = 'Delete all frames'; b.classList.remove('primary');
+    S.frames = []; S.offset = 0; S.angle = 0;
+    changed();
+  };
   $('fileIn').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   const drop = $('drop');
   ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
@@ -1178,20 +1211,61 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     return c;
   }
 
-  $('saveAnim').onclick = async () => {
-    if (S.frames.length < 2) { $('saveMsg').textContent = 'Servono almeno 2 fotogrammi per salvare.'; return; }
-    const name = $('animName').value.trim() || `Animazione ${saved.length + 1}`;
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  // deep copy, so later edits to S (e.g. the text object) don't leak into the saved record
+  const snapshot = () => structuredClone(Object.fromEntries(SKEYS.filter(k => !k.startsWith('editing')).map(k => [k, S[k]])));
+  function dropCache(id) {
+    if (thumbs.has(id)) URL.revokeObjectURL(thumbs.get(id));
+    thumbs.delete(id); bitmaps.delete(id + 'base'); bitmaps.delete(id + 'grid');
+  }
+
+  async function saveForPrint(asNew) {
+    if (S.frames.length < 2) { $('saveMsg').textContent = 'At least 2 frames are needed to save.'; return; }
+    const old = !asNew && S.editingId ? saved.find(r => r.id === S.editingId) : null;
+    const name = $('animName').value.trim() || `Animation ${saved.length + 1}`;
+    const frames = [];
+    for (const f of S.frames) frames.push({ name: f.name, blob: f.blob || (f.blob = await toPng(f.src)) });
     const rec = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, created: Date.now(),
+      id: old ? old.id : newId(), name, created: old ? old.created : Date.now(),
       wMm: pxToMm(S.outW), hMm: pxToMm(S.outH), info: infoSegments(),
-      base: await toPng(baseCv), grid: await toPng(gridCanvas()), checked: true, copies: 1
+      base: await toPng(baseCv), grid: await toPng(gridCanvas()),
+      checked: old ? old.checked : true, copies: old ? old.copies : 1,
+      settings: snapshot(), frames, gif: S.gif ? { bytes: S.gif.bytes, name: S.gif.name } : null
     };
-    saved.push(rec);
+    if (old) { dropCache(old.id); saved[saved.indexOf(old)] = rec; setEditing(rec); }
+    else { saved.push(rec); setEditing(null); }
     persist(rec);
-    $('animName').value = '';
-    $('saveMsg').textContent = `Salvata "${name}" (${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm). La trovi nella sezione Stampa in fondo alla pagina.`;
+    $('saveMsg').textContent = old
+      ? `Updated "${name}" (${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm).`
+      : `Saved "${name}" (${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm). You'll find it under Print on A4 at the bottom of the page.`;
     renderPrint();
-  };
+  }
+  $('saveAnim').onclick = () => saveForPrint(false);
+  $('saveAsNew').onclick = () => saveForPrint(true);
+
+  function setEditing(rec) {
+    S.editingId = rec ? rec.id : null; S.editingName = rec ? rec.name : '';
+    $('animName').value = S.editingName;
+    syncEditUI();
+    scheduleSave();
+  }
+  function syncEditUI() {
+    const on = !!S.editingId;
+    $('saveAnim').textContent = on ? 'Update' : 'Save for printing';
+    $('saveAsNew').hidden = $('editNote').hidden = !on;
+    $('editName').textContent = `"${S.editingName}"`;
+  }
+  $('stopEdit').onclick = () => { setEditing(null); renderPrint(); };
+
+  // reopen a saved animation in the editor, with its frames and every setting
+  async function editSaved(rec) {
+    await loadState(rec.settings, rec.frames, rec.gif);
+    framesDirty = true;
+    setEditing(rec);
+    $('saveMsg').textContent = '';
+    renderPrint();
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  }
 
   function renderPrint() {
     const ul = $('printList'); ul.innerHTML = '';
@@ -1201,9 +1275,15 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       if (!thumbs.has(rec.id)) thumbs.set(rec.id, URL.createObjectURL(rec.base));
       const li = document.createElement('li');
       li.innerHTML = `<input type="checkbox"><img alt=""><span class="pname"><b></b><small></small></span>
-        <label class="copies">Copie <input type="number" min="1" max="50"></label><button type="button">✕</button>`;
+        <label class="copies">Copies <input type="number" min="1" max="50"></label>
+        <button type="button" class="edit">Edit</button><button type="button" class="del">✕</button>`;
+      li.classList.toggle('editing', rec.id === S.editingId);
+      const edit = li.querySelector('.edit');
+      edit.setAttribute('aria-label', `Edit ${rec.name}`);
+      if (rec.frames?.length) edit.onclick = () => editSaved(rec);
+      else { edit.disabled = true; edit.title = 'Saved with an earlier version: it has no frames, so it can\'t be reopened.'; }
       const [chk, copies] = li.querySelectorAll('input');
-      chk.checked = rec.checked; chk.setAttribute('aria-label', `Includi ${rec.name} nella stampa`);
+      chk.checked = rec.checked; chk.setAttribute('aria-label', `Include ${rec.name} in the print`);
       li.querySelector('img').src = thumbs.get(rec.id);
       li.querySelector('b').textContent = rec.name;
       li.querySelector('small').textContent = `${rec.wMm.toFixed(1)} × ${rec.hMm.toFixed(1)} mm`;
@@ -1213,12 +1293,12 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         rec.copies = Math.max(1, Math.min(50, Math.round(+copies.value || 1))); copies.value = rec.copies;
         persist(rec); schedulePreview();
       };
-      const del = li.querySelector('button');
-      del.setAttribute('aria-label', `Elimina ${rec.name}`);
+      const del = li.querySelector('.del');
+      del.setAttribute('aria-label', `Delete ${rec.name}`);
       del.onclick = () => {
         saved = saved.filter(r => r !== rec);
-        URL.revokeObjectURL(thumbs.get(rec.id)); thumbs.delete(rec.id);
-        bitmaps.delete(rec.id + 'base'); bitmaps.delete(rec.id + 'grid');
+        dropCache(rec.id);
+        if (S.editingId === rec.id) setEditing(null);
         store.del(rec.id).catch(() => {});
         renderPrint();
       };
@@ -1305,11 +1385,11 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     const frag = document.createDocumentFragment();
     for (let i = 0; i < L.pages.length; i++) {
       const pair = document.createElement('div'); pair.className = 'sheet-pair';
-      for (const [kind, label] of [['base', 'immagini'], ['grid', 'griglie (acetato)']]) {
+      for (const [kind, label] of [['base', 'images'], ['grid', 'grids (acetate)']]) {
         const fig = document.createElement('figure');
         fig.appendChild(await drawSheet(L, L.pages[i], kind));
         const cap = document.createElement('figcaption');
-        cap.textContent = `Foglio ${i + 1} · ${label}`;
+        cap.textContent = `Sheet ${i + 1} · ${label}`;
         fig.appendChild(cap); pair.appendChild(fig);
       }
       frag.appendChild(pair);
@@ -1318,10 +1398,10 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     $('sheets').replaceChildren(frag);
     const msg = $('printMsg');
     const placed = L.total - L.tooBig.length;
-    let text = placed ? `${placed} ${placed === 1 ? 'pezzo' : 'pezzi'} su ${L.pages.length} ${L.pages.length === 1 ? 'foglio' : 'fogli'} per tipo.` : '';
+    let text = placed ? `${placed} ${placed === 1 ? 'piece' : 'pieces'} on ${L.pages.length} ${L.pages.length === 1 ? 'sheet' : 'sheets'} of each kind.` : '';
     if (L.tooBig.length) {
       const names = [...new Set(L.tooBig.map(t => t.rec.name))].join(', ');
-      text += ` Non entra${L.tooBig.length > 1 ? 'no' : ''} nel foglio: ${names}. Riduci il margine o prova il foglio orizzontale.`;
+      text += ` Doesn't fit on the sheet: ${names}. Reduce the margin or try landscape.`;
     }
     msg.textContent = text.trim();
     msg.classList.toggle('warn', L.tooBig.length > 0);
@@ -1350,13 +1430,13 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     return doc.output('blob');
   }
   async function exportPdf(kind, btn) {
-    if (!window.jspdf) { $('printMsg').textContent = 'Il generatore di PDF non si è caricato: controlla la connessione e ricarica la pagina.'; return; }
-    const label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparo il PDF…';
+    if (!window.jspdf) { $('printMsg').textContent = 'The PDF generator did not load: check your connection and reload the page.'; return; }
+    const label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing the PDF…';
     try {
       const blob = await buildPdf(kind);
-      await deliver(blob, kind === 'base' ? 'scanimation-fogli-immagini.pdf' : 'scanimation-fogli-griglie.pdf');
+      await deliver(blob, kind === 'base' ? 'scanimation-sheets-images.pdf' : 'scanimation-sheets-grids.pdf');
     } catch (e) {
-      $('printMsg').textContent = `Non sono riuscito a creare il PDF: ${e.message || e}`;
+      $('printMsg').textContent = `Couldn't create the PDF: ${e.message || e}`;
     } finally { btn.disabled = false; btn.textContent = label; }
   }
   $('pdfBase').onclick = e => exportPdf('base', e.currentTarget);
@@ -1371,8 +1451,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     const d = g.getImageData(0, 0, W, H).data, open = (x, y) => d[(y * W + x) * 4 + 3] < 128;
     const num = re => { const m = rec.info.join(' ').match(re); return m ? +m[1] : 0; };
     const pxPerMm = W / rec.wMm;
-    if (/al bordo/.test(rec.info.join(' '))) {
-      const strip = num(/Striscia ([\d.]+) mm/), cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 * 0.9;
+    if (/al bordo|at edge/.test(rec.info.join(' '))) {
+      const strip = num(/(?:Striscia|Strip) ([\d.]+) mm/), cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 * 0.9;
       let rays = 0, prev = null;
       for (let i = 0; i <= 7200; i++) {
         const a = i / 7200 * Math.PI * 2, o = open(Math.round(cx + r * Math.cos(a)), Math.round(cy + r * Math.sin(a)));
@@ -1382,7 +1462,7 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
       const alpha = strip / (Math.min(rec.wMm, rec.hMm) / 2);
       return rays && alpha ? Math.round(Math.PI * 2 / (rays * alpha)) : 0;
     }
-    const strip = num(/Striscia ([\d.]+) mm/) * pxPerMm;
+    const strip = num(/(?:Striscia|Strip) ([\d.]+) mm/) * pxPerMm;
     const starts = (len, at) => { const s = []; for (let i = 1; i < len; i++) if (!at(i - 1) && at(i)) s.push(i); return s; };
     let s = starts(W, x => open(x, H >> 1));
     if (s.length < 2) s = starts(H, y => open(W >> 1, y));
@@ -1404,16 +1484,17 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
 
   // ---------- Work session: the current animation comes back after a reload ----------
   const SKEYS = ['w', 'vertical', 'radial', 'rays', 'aperture', 'loop', 'outW', 'outH', 'dpi', 'lockMm', 'ratio', 'figScale',
-    'mode', 'thresh', 'invert', 'fill', 'blur', 'levels', 'gray', 'gifN', 'gifStart', 'gifEnd', 'text', 'speed', 'rspeed', 'showGrid', 'source'];
-  const UI_IDS = ['zoom', 'infoBand', 'pOrient', 'pMargin', 'pGap', 'pInfo', 'pOutline', 'gifUrl', 'animName'];
+    'mode', 'thresh', 'invert', 'fill', 'blur', 'levels', 'gray', 'gifN', 'gifStart', 'gifEnd', 'text', 'speed', 'rspeed', 'showGrid', 'source', 'editingId', 'editingName'];
+  const UI_IDS = ['printBox', 'zoom', 'infoBand', 'pOrient', 'pMargin', 'pGap', 'pInfo', 'pOutline', 'gifUrl', 'animName'];
   let restoring = true, framesDirty = false, sdeb;
   function scheduleSave() { if (restoring) return; clearTimeout(sdeb); sdeb = setTimeout(saveSession, 700); }
   ['input', 'change'].forEach(t => document.addEventListener(t, scheduleSave));
+  $('printBox').addEventListener('toggle', scheduleSave);
   document.addEventListener('click', e => { if (e.target.closest('button')) scheduleSave(); });
 
   async function saveSession() {
     const settings = Object.fromEntries(SKEYS.map(k => [k, S[k]]));
-    const ui = Object.fromEntries(UI_IDS.map(id => { const el = $(id); return [id, el.type === 'checkbox' ? el.checked : el.value]; }));
+    const ui = Object.fromEntries(UI_IDS.map(id => { const el = $(id); return [id, el.tagName === 'DETAILS' ? el.open : el.type === 'checkbox' ? el.checked : el.value]; }));
     try {
       await store.sessionPut('settings', { settings, ui });
       if (!framesDirty) return;
@@ -1425,15 +1506,16 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     } catch { /* storage unavailable: the work just won't survive a reload */ }
   }
 
-  async function restoreSession() {
-    let rec = null, fr = null;
-    try { rec = await store.sessionGet('settings'); fr = await store.sessionGet('frames'); } catch { /* nothing stored */ }
-    if (rec?.settings) {
-      const text = { ...S.text, ...(rec.settings.text || {}) };
-      Object.assign(S, rec.settings); S.text = text;
+  async function loadState(settings, frames, gif, ui = {}) {
+    if (settings) {
+      const text = { ...S.text, ...(settings.text || {}) };
+      Object.assign(S, settings); S.text = text;
     }
-    if (fr?.gif?.bytes) { try { S.gif = decodeGif(fr.gif.bytes, fr.gif.name); } catch { S.gif = null; } }
-    for (const f of fr?.frames || []) {
+    S.gif = null;
+    if (gif?.bytes) { try { S.gif = decodeGif(gif.bytes, gif.name); } catch { S.gif = null; } }
+    if (!S.gif) { $('gifCtrl').hidden = true; }
+    S.frames = [];
+    for (const f of frames || []) {
       try {
         const b = await createImageBitmap(f.blob);
         const c = document.createElement('canvas'); c.width = b.width; c.height = b.height;
@@ -1441,14 +1523,21 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
         S.frames.push({ name: f.name, src: c, blob: f.blob });
       } catch { /* skip an unreadable frame */ }
     }
-    syncUI(rec?.ui || {});
+    S.offset = 0; S.angle = 0;
+    syncUI(ui);
+  }
+
+  async function restoreSession() {
+    let rec = null, fr = null;
+    try { rec = await store.sessionGet('settings'); fr = await store.sessionGet('frames'); } catch { /* nothing stored */ }
+    await loadState(rec?.settings, fr?.frames, fr?.gif, rec?.ui || {});
   }
 
   // put every control in line with S (and the stored page options), then redraw once everything is set
   function syncUI(ui) {
     for (const [id, v] of Object.entries(ui)) {
       const el = $(id); if (!el) continue;
-      if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+      if (el.tagName === 'DETAILS') el.open = !!v; else if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
     }
     $('zoom').onchange({ target: $('zoom') });
     $('slit').value = S.w;
@@ -1476,6 +1565,8 @@ button:disabled:hover { background: var(--bg); color: var(--ink); }
     renderList();
     syncSlit();
     setDims(S.outW, S.outH);
+    syncEditUI();
+    $('animName').value = S.editingName || $('animName').value;
     schedulePreview();
   }
 
