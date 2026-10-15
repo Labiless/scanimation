@@ -9,9 +9,10 @@
   ];
 </script>
 
-<section class="panel" aria-label="Colour">
+<section class="panel" aria-labelledby="h-colour">
+  <h2 id="h-colour">Style</h2>
   <div class="row">
-    <span class="lbl">Colour</span>
+    <span class="lbl">Mode</span>
     <div class="seg" role="group" aria-label="Colour">
       {#each MODES as m (m.id)}
         <button
@@ -40,7 +41,8 @@
   >
 </section>
 
-<section class="panel" aria-label="Fill and blur">
+<section class="panel" aria-labelledby="h-fill">
+  <h2 id="h-fill">Fill and blur</h2>
   {#if settings.mode === 'sil'}
     <div class="row">
       <input id="fill" type="color" aria-label="Fill colour" bind:value={settings.fill} />

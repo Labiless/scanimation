@@ -4,6 +4,7 @@
   import { settings, ui, media, motion, frameCount, wedgeAngle } from '../stores/state.svelte.js';
   import { baseCanvas, previewGrid, rendered } from '../stores/render.svelte.js';
   import Measurements from './Measurements.svelte';
+  import ExportBar from './ExportBar.svelte';
 
   /** @type {HTMLCanvasElement} */
   let view;
@@ -190,6 +191,7 @@
       />
     </div>
   </div>
+  <ExportBar />
   <div class="readout" id="readout">
     {#if readout}
       Visible frame <b>{readout.frame}</b> / {readout.total} · {readout.label} <b>{readout.value}</b> over a
@@ -224,7 +226,7 @@
 
   .fit canvas {
     max-width: 100%;
-    max-height: max(260px, calc(100vh - 170px));
+    max-height: max(260px, calc(100vh - 260px));
     width: auto;
     height: auto;
   }

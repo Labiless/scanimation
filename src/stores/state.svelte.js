@@ -35,7 +35,6 @@ export const settings = $state({
   outW: 800,
   outH: 800,
   dpi: 300,
-  lockMm: false, // the last size edit was in mm, so a dpi change keeps the mm
   ratio: 1, // width / height, 0 when free
   figScale: 1,
 
@@ -82,7 +81,6 @@ export const ui = $state({
   zoom: 'fit',
   infoBand: true,
   gifUrl: '',
-  animName: '',
   sheet: { landscape: false, margin: 10, gap: 5, info: true, outline: true },
 });
 

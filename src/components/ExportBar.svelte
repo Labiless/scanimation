@@ -1,4 +1,4 @@
-<!-- PNG downloads (with their print resolution), and saving the animation for printing. -->
+<!-- Under the preview: PNG downloads (with their print resolution) and saving the animation for printing. -->
 <script>
   import { settings, ui, media, pxToMm } from '../stores/state.svelte.js';
   import { baseCanvas, printGrid } from '../stores/render.svelte.js';
@@ -42,7 +42,7 @@
   }
 </script>
 
-<section class="panel actions" aria-label="Export and save">
+<div class="export-bar" aria-label="Export and save" role="group">
   <div class="row">
     <button id="saveGrid" type="button" class="primary" onclick={downloadGrid}
       >Download grid (transparent PNG)</button
@@ -50,33 +50,24 @@
     <button id="saveBase" type="button" class="primary" onclick={downloadBase}
       >Download base image (PNG)</button
     >
+    <button id="saveAnim" type="button" class="primary" onclick={() => saveForPrint(false)}>
+      {settings.editingId ? 'Update saved animation' : 'Save for printing'}
+    </button>
   </div>
   <label class="lbl"
     ><input id="infoBand" type="checkbox" bind:checked={ui.infoBand} />Add a line with the settings above the
     image</label
   >
-  <div class="row">
-    <input
-      id="animName"
-      type="text"
-      placeholder="Name (optional)"
-      aria-label="Animation name"
-      bind:value={ui.animName}
-    />
-    <button id="saveAnim" type="button" class="primary" onclick={() => saveForPrint(false)}>
-      {settings.editingId ? 'Update' : 'Save for printing'}
-    </button>
-    {#if settings.editingId}
-      <button id="saveAsNew" type="button" onclick={() => saveForPrint(true)}>Save as new</button>
-    {/if}
-  </div>
   {#if settings.editingId}
     <div class="row" id="editNote">
       <span class="note">Editing <b>"{settings.editingName}"</b>: "Update" overwrites the saved one.</span>
+      <button id="saveAsNew" type="button" onclick={() => saveForPrint(true)}>Save as new</button>
       <button id="stopEdit" type="button" onclick={() => setEditing(null)}>Stop editing</button>
     </div>
   {/if}
-  <p class="note" id="saveMsg" role="status">{libraryStatus.message}</p>
+  {#if libraryStatus.message}
+    <p class="note" id="saveMsg" role="status">{libraryStatus.message}</p>
+  {/if}
 
   {#if fallbacks.length}
     <div class="exports" id="exports">
@@ -99,17 +90,20 @@
       {/each}
     </div>
   {/if}
-</section>
+</div>
 
 <style>
-  .row button {
+  .row:first-child button {
     flex: 1 1 auto;
     justify-content: center;
   }
 
-  #animName {
-    flex: 1 1 140px;
-    width: auto;
+  .export-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--ink);
   }
 
   .exports {

@@ -9,7 +9,6 @@
   import FormatPanel from './components/FormatPanel.svelte';
   import SizePanel from './components/SizePanel.svelte';
   import ColourPanel from './components/ColourPanel.svelte';
-  import ExportPanel from './components/ExportPanel.svelte';
   import Preview from './components/Preview.svelte';
   import PrintSection from './components/PrintSection.svelte';
 
@@ -45,7 +44,6 @@
       <div class="pair">
         <ColourPanel />
       </div>
-      <ExportPanel />
     </div>
     <Preview />
   </div>

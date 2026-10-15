@@ -1,10 +1,11 @@
 /**
- * Output size rules: clamped pixels, fixed aspect ratio, dpi changes that keep the last unit edited.
+ * Output size rules. The size is chosen in millimetres; the pixels follow from the dpi and are
+ * clamped to a range the browser can process comfortably.
  */
 import { settings, pxToMm, mmToPx } from './state.svelte.js';
 
-const MIN_PX = 100;
-const MAX_PX = 5000;
+export const MIN_PX = 100;
+export const MAX_PX = 5000;
 const clampPx = (v) => Math.max(MIN_PX, Math.min(MAX_PX, Math.round(+v || 0)));
 
 export function setDims(wpx, hpx) {
@@ -22,10 +23,10 @@ export function setRatio(ratio) {
   if (ratio) fromWidth(settings.outW);
 }
 
-/** A dpi change keeps whichever the user set last: the millimetres or the pixels. */
+/** A dpi change keeps the size in millimetres; the pixels are recalculated. */
 export function setDpi(dpi) {
   const wMm = pxToMm(settings.outW);
   const hMm = pxToMm(settings.outH);
   settings.dpi = dpi;
-  if (settings.lockMm) setDims(mmToPx(wMm), mmToPx(hMm));
+  setDims(mmToPx(wMm), mmToPx(hMm));
 }

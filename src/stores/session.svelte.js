@@ -19,7 +19,8 @@ let ready = $state(false);
  */
 export async function loadState(stored, frames, gif) {
   if (stored) {
-    const { text, playing: _playing, ...rest } = stored;
+    // lockMm: from versions that also offered pixel fields; the size is now always kept in mm
+    const { text, playing: _playing, lockMm: _lockMm, ...rest } = stored;
     Object.assign(settings, rest);
     if (text) Object.assign(settings.text, text);
   }
@@ -54,7 +55,6 @@ function migrateUi(saved) {
     zoom: saved.zoom,
     infoBand: saved.infoBand,
     gifUrl: saved.gifUrl,
-    animName: saved.animName,
     sheet: {
       landscape: saved.pOrient === 'l',
       margin: +saved.pMargin,
@@ -70,7 +70,8 @@ export async function restoreSession() {
     const stored = await store.get('settings');
     const frames = await store.get('frames');
     if (stored?.ui) {
-      const { sheet, ...rest } = migrateUi(stored.ui);
+      // animName: the name field was removed; saved animations are numbered instead
+      const { sheet, animName: _animName, ...rest } = migrateUi(stored.ui);
       Object.assign(ui, rest);
       if (sheet) Object.assign(ui.sheet, sheet);
     }

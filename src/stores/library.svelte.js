@@ -1,7 +1,7 @@
 /**
  * Animations saved for printing: save, update, reopen in the editor, include, copies, delete.
  */
-import { settings, ui, media, pxToMm, settingsSnapshot } from './state.svelte.js';
+import { settings, media, pxToMm, settingsSnapshot } from './state.svelte.js';
 import { baseCanvas, printGrid } from './render.svelte.js';
 import { loadState } from './session.svelte.js';
 import { infoSegments } from '../core/info.js';
@@ -39,6 +39,9 @@ export const library = {
 /** `persistent` is false when this browser refuses to store the animations. */
 export const libraryStatus = $state({ persistent: true, message: '' });
 
+/** One more than the highest "Animation N" saved so far, so deleting one never repeats a number. */
+const nextNumber = () =>
+  Math.max(0, ...records.map((r) => +(r.name.match(/^Animation (\d+)$/)?.[1] ?? 0))) + 1;
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 export const sizeLabel = (r) => `${r.wMm.toFixed(1)} × ${r.hMm.toFixed(1)} mm`;
 
@@ -50,7 +53,6 @@ function persist(record) {
 export function setEditing(record) {
   settings.editingId = record?.id ?? null;
   settings.editingName = record?.name ?? '';
-  ui.animName = settings.editingName;
 }
 
 /** @param {boolean} asNew save a copy even while editing a saved animation */
@@ -60,7 +62,8 @@ export async function saveForPrint(asNew) {
     return;
   }
   const old = !asNew && settings.editingId ? records.find((r) => r.id === settings.editingId) : null;
-  const name = ui.animName.trim() || `Animation ${records.length + 1}`;
+  // animations are numbered in the order they are saved; an update keeps its name
+  const name = old ? old.name : `Animation ${nextNumber()}`;
   const frames = [];
   for (const f of media.frames) frames.push({ name: f.name, blob: (f.blob ??= await toPngBlob(f.src)) });
 

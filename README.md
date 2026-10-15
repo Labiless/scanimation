@@ -47,8 +47,8 @@ src/
     FormatPanel.svelte     aspect ratio and dpi
     SizePanel.svelte       size in px or mm, figure size
     ColourPanel.svelte     silhouette, posterize, original; invert, fill, blur
-    ExportPanel.svelte     PNG downloads, save for printing, editing state
     Preview.svelte         live preview, toolbar, dragging the grid
+    ExportBar.svelte       under the preview: PNG downloads, save for printing, editing state
     Measurements.svelte    strip, slit, bar, period, brightness, format
     PrintSection.svelte    Print on A4: saved animations, sheet options and previews, PDFs
   stores/                  reactive state and the actions on it (.svelte.js = uses runes)

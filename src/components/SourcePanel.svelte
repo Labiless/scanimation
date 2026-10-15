@@ -34,7 +34,8 @@
   }
 </script>
 
-<section class="panel" aria-label="Frames">
+<section class="panel" aria-labelledby="h-frames">
+  <h2 id="h-frames">Frames</h2>
   <div class="row between">
     <div class="seg" role="group" aria-label="Frame source">
       {#each TABS as tab (tab.id)}
