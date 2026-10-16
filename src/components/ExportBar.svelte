@@ -7,14 +7,26 @@
   import { withInfoBand } from '../core/info.js';
   import { toPngBlob } from '../lib/canvas.js';
   import { deliver } from '../lib/download.js';
+  import { phone } from '../lib/media.js';
 
   /** Images shown when a sandboxed frame ignores the download link, so they can be saved by hand. */
   let fallbacks = $state([]);
 
+  /** There is something to export: at least two frames. */
+  const ready = $derived(media.frames.length >= 2);
+
+  // on phones the bar pinned to the bottom appears only with an animation to export;
+  // the page keeps room for it only while it is there
+  $effect(() => {
+    document.body.classList.toggle('with-export-bar', phone.current && ready);
+    return () => document.body.classList.remove('with-export-bar');
+  });
+
   const sizeTag = () =>
     `${pxToMm(settings.outW).toFixed(0)}x${pxToMm(settings.outH).toFixed(0)}mm-${settings.dpi}dpi`;
+  // on phones the option is hidden and the settings line is always added
   const withSettingsLine = (canvas, transparent) =>
-    ui.infoBand ? withInfoBand(canvas, transparent) : canvas;
+    ui.infoBand || phone.current ? withInfoBand(canvas, transparent) : canvas;
 
   async function savePng(canvas, file, caption) {
     const blob = await withDpi(await toPngBlob(canvas), settings.dpi);
@@ -43,21 +55,31 @@
 </script>
 
 <div class="export-bar" aria-label="Export and save" role="group" data-tour="export">
-  <div class="row">
-    <button id="saveGrid" type="button" class="primary" onclick={downloadGrid}
-      >Download grid (transparent PNG)</button
-    >
-    <button id="saveBase" type="button" class="primary" onclick={downloadBase}
-      >Download base image (PNG)</button
-    >
+  <!-- on phones this row is pinned to the bottom of the screen, with short labels -->
+  <div class="row buttons" class:waiting={!ready}>
+    <button id="saveGrid" type="button" class="primary" onclick={downloadGrid}>
+      <span class="long">Download grid (transparent PNG)</span><span class="short" aria-hidden="true"
+        >Export grid</span
+      >
+    </button>
+    <button id="saveBase" type="button" class="primary" onclick={downloadBase}>
+      <span class="long">Download base image (PNG)</span><span class="short" aria-hidden="true"
+        >Export base</span
+      >
+    </button>
     <button id="saveAnim" type="button" class="primary" onclick={() => saveForPrint(false)}>
-      {settings.editingId ? 'Update saved animation' : 'Save for printing'}
+      <span class="long">{settings.editingId ? 'Update saved animation' : 'Save for printing'}</span><span
+        class="short"
+        aria-hidden="true">{settings.editingId ? 'Update' : 'Save'}</span
+      >
     </button>
   </div>
-  <label class="lbl"
-    ><input id="infoBand" type="checkbox" bind:checked={ui.infoBand} />Add a line with the settings above the
-    image</label
-  >
+  {#if !phone.current}
+    <label class="lbl"
+      ><input id="infoBand" type="checkbox" bind:checked={ui.infoBand} />Add a line with the settings above
+      the image</label
+    >
+  {/if}
   {#if settings.editingId}
     <div class="row" id="editNote">
       <span class="note">Editing <b>"{settings.editingName}"</b>: "Update" overwrites the saved one.</span>
@@ -93,9 +115,65 @@
 </div>
 
 <style>
-  .row:first-child button {
+  .buttons button {
     flex: 1 1 auto;
     justify-content: center;
+  }
+
+  .short {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    /* the buttons live in the bar pinned to the bottom, so the section under the preview takes no room */
+    /* no box of its own: the pinned buttons leave the flow, and the editing note or message
+       (when there is one) sits directly in the preview panel */
+    div.export-bar {
+      display: contents;
+    }
+
+    .buttons {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      flex-wrap: nowrap;
+      gap: 6px;
+      padding: 6px 16px calc(6px + env(safe-area-inset-bottom, 0px));
+      background: var(--bg);
+      border-top: 1px solid var(--ink);
+    }
+
+    .buttons button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 5px 4px;
+      font-size: 11px;
+    }
+
+    /* the full text stays for screen readers; the short one is what fits on screen */
+    .long {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .short {
+      display: inline;
+    }
+
+    /* keep the end of the page clear of the pinned bar */
+    .buttons.waiting {
+      display: none;
+    }
+
+    :global(body.with-export-bar) {
+      padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   .export-bar {

@@ -106,7 +106,12 @@
   const GAP = 12;
   const PAD = 6;
 
-  const targetEl = () => (step.target ? document.querySelector(`[data-tour="${step.target}"]`) : null);
+  /** The area to highlight; an element without a box of its own (display: contents) stands for its first child. */
+  function targetEl() {
+    const el = step.target ? document.querySelector(`[data-tour="${step.target}"]`) : null;
+    if (el && getComputedStyle(el).display === 'contents') return el.firstElementChild;
+    return el;
+  }
 
   /** Highlight the target and put the card below, above, right or left of it, whichever fits first. */
   function measure() {

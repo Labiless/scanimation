@@ -5,6 +5,7 @@
   import { baseCanvas, previewGrid, rendered } from '../stores/render.svelte.js';
   import Measurements from './Measurements.svelte';
   import ExportBar from './ExportBar.svelte';
+  import { phone } from '../lib/media.js';
 
   /** @type {HTMLCanvasElement} */
   let view;
@@ -156,41 +157,52 @@
       onpointercancel={() => (dragging = false)}
     ></canvas>
   </div>
-  <div class="toolbar">
-    <button id="playBtn" type="button" onclick={() => (settings.playing = !settings.playing)}>
-      {settings.playing ? 'Pause' : 'Play'}
-    </button>
-    <button id="stepBtn" type="button" onclick={nextFrame}>Next frame</button>
-    <div class="seg" role="group" aria-label="View">
-      <button
-        type="button"
-        id="viewGrid"
-        aria-pressed={settings.showGrid}
-        onclick={() => (settings.showGrid = true)}>With grid</button
-      >
-      <button
-        type="button"
-        id="viewBase"
-        aria-pressed={!settings.showGrid}
-        onclick={() => (settings.showGrid = false)}>Base only</button
-      >
+  {#snippet controls()}
+    <div class="toolbar">
+      <button id="playBtn" type="button" onclick={() => (settings.playing = !settings.playing)}>
+        {settings.playing ? 'Pause' : 'Play'}
+      </button>
+      <button id="stepBtn" type="button" onclick={nextFrame}>Next frame</button>
+      <div class="seg" role="group" aria-label="View">
+        <button
+          type="button"
+          id="viewGrid"
+          aria-pressed={settings.showGrid}
+          onclick={() => (settings.showGrid = true)}>With grid</button
+        >
+        <button
+          type="button"
+          id="viewBase"
+          aria-pressed={!settings.showGrid}
+          onclick={() => (settings.showGrid = false)}>Base only</button
+        >
+      </div>
+      <select id="zoom" aria-label="Zoom" bind:value={ui.zoom}>
+        <option value="fit">Fit</option>
+        <option value="1">100%</option>
+        <option value="2">200%</option>
+      </select>
+      <div class="speed">
+        <label for="speed">Grid speed: <b>{speed.value} {speed.unit}</b></label>
+        <input
+          id="speed"
+          type="range"
+          min={speed.min}
+          max={speed.max}
+          bind:value={() => speed.value, setSpeed}
+        />
+      </div>
     </div>
-    <select id="zoom" aria-label="Zoom" bind:value={ui.zoom}>
-      <option value="fit">Fit</option>
-      <option value="1">100%</option>
-      <option value="2">200%</option>
-    </select>
-    <div class="speed">
-      <label for="speed">Grid speed: <b>{speed.value} {speed.unit}</b></label>
-      <input
-        id="speed"
-        type="range"
-        min={speed.min}
-        max={speed.max}
-        bind:value={() => speed.value, setSpeed}
-      />
-    </div>
-  </div>
+  {/snippet}
+  <!-- on phones the player controls fold away, leaving room for the preview -->
+  {#if phone.current}
+    <details class="player">
+      <summary>Player controls</summary>
+      {@render controls()}
+    </details>
+  {:else}
+    {@render controls()}
+  {/if}
   <ExportBar />
   <div class="readout" id="readout">
     {#if readout}
@@ -252,6 +264,17 @@
     align-items: center;
   }
 
+  .player summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 0;
+  }
+
+  .player[open] summary {
+    margin-bottom: 6px;
+  }
+
   .toolbar select {
     width: auto;
   }
@@ -278,5 +301,12 @@
 
   .readout b {
     font-weight: 500;
+  }
+
+  /* on phones the frame counter is left out to give the preview more room */
+  @media (max-width: 640px) {
+    .readout {
+      display: none;
+    }
   }
 </style>

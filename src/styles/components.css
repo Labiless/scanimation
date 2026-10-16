@@ -103,12 +103,6 @@ button,
   white-space: nowrap;
 }
 
-button:hover,
-.btn:hover {
-  background: var(--ink);
-  color: var(--inv);
-}
-
 button.primary,
 .btn.primary {
   background: var(--cta);
@@ -117,11 +111,20 @@ button.primary,
   font-weight: 700;
 }
 
-button.primary:hover,
-.btn.primary:hover {
-  background: #000;
-  border-color: var(--cta);
-  color: var(--cta);
+/* hover only where there is a pointer: on touch screens it would stay stuck after a tap */
+@media (hover: hover) {
+  button:hover,
+  .btn:hover {
+    background: var(--ink);
+    color: var(--inv);
+  }
+
+  button.primary:hover,
+  .btn.primary:hover {
+    background: #000;
+    border-color: var(--cta);
+    color: var(--cta);
+  }
 }
 
 button:focus-visible,

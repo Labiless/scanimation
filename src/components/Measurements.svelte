@@ -77,4 +77,11 @@
     margin: 0 0 0 -10px;
     font-weight: 500;
   }
+
+  /* on phones the preview needs the room; the measurements stay on larger screens */
+  @media (max-width: 640px) {
+    .spec {
+      display: none;
+    }
+  }
 </style>

@@ -78,6 +78,34 @@
     font-weight: 700;
   }
 
+  /* phones: a smaller row, aligned left under the title */
+  @media (max-width: 640px) {
+    .credits {
+      margin-left: 0;
+      width: 100%;
+      gap: 6px 8px;
+    }
+
+    .made {
+      font-size: 11px;
+    }
+
+    ul {
+      gap: 4px;
+    }
+
+    a,
+    .guide {
+      padding: 3px 6px;
+      font-size: 11px;
+    }
+
+    a :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
   /* on narrow screens the icons alone are enough; the title still names each link */
   @media (max-width: 560px) {
     a span {
