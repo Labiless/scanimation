@@ -35,10 +35,14 @@ export async function canvasFromBlob(blob) {
  * @param {number} W
  * @param {number} H
  * @param {number} [scale]
+ * @returns {{ x: number, y: number, w: number, h: number }} where the image landed
  */
 export function drawContain(g, src, W, H, scale = 1) {
   const s = Math.min(W / src.width, H / src.height) * scale;
   const w = src.width * s;
   const h = src.height * s;
-  g.drawImage(src, (W - w) / 2, (H - h) / 2, w, h);
+  const x = (W - w) / 2;
+  const y = (H - h) / 2;
+  g.drawImage(src, x, y, w, h);
+  return { x, y, w, h };
 }

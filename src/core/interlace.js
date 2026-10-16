@@ -19,6 +19,61 @@ import { createCanvas, drawContain } from '../lib/canvas.js';
 const luminance = (d, p) => 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
 
 /**
+ * When the image is smaller than the format, paint the margins in the image's own background colour,
+ * so the image doesn't show as a rectangle inside the animation. The background is read from the
+ * pixels just inside the image's edges: the darker or the lighter ones, whichever are more,
+ * averaged together. Runs after the colour treatment, so it already accounts for threshold and invert.
+ * @param {Uint8ClampedArray} d RGBA pixels, W×H
+ * @param {number} W
+ * @param {number} H
+ * @param {{ x: number, y: number, w: number, h: number }} rect where the image was drawn
+ */
+function fillMargins(d, W, H, rect) {
+  // skip a pixel inside the edge: it may be blended with the margin by smoothing
+  const x0 = Math.ceil(rect.x) + 1;
+  const y0 = Math.ceil(rect.y) + 1;
+  const x1 = Math.floor(rect.x + rect.w) - 2;
+  const y1 = Math.floor(rect.y + rect.h) - 2;
+  if (x0 <= 1 && y0 <= 1 && x1 >= W - 3 && y1 >= H - 3) return; // the image fills the format
+  if (x1 <= x0 || y1 <= y0) return;
+
+  const sums = { dark: [0, 0, 0, 0], light: [0, 0, 0, 0] };
+  const sample = (x, y) => {
+    const p = (y * W + x) * 4;
+    const s = luminance(d, p) < 128 ? sums.dark : sums.light;
+    s[0] += d[p];
+    s[1] += d[p + 1];
+    s[2] += d[p + 2];
+    s[3]++;
+  };
+  for (let x = x0; x <= x1; x++) {
+    sample(x, y0);
+    sample(x, y1);
+  }
+  for (let y = y0 + 1; y < y1; y++) {
+    sample(x0, y);
+    sample(x1, y);
+  }
+  const s = sums.dark[3] > sums.light[3] ? sums.dark : sums.light;
+  const [r, g, b] = [s[0] / s[3], s[1] / s[3], s[2] / s[3]];
+
+  const ix0 = Math.max(0, Math.ceil(rect.x));
+  const iy0 = Math.max(0, Math.ceil(rect.y));
+  const ix1 = Math.min(W, Math.floor(rect.x + rect.w));
+  const iy1 = Math.min(H, Math.floor(rect.y + rect.h));
+  for (let y = 0; y < H; y++) {
+    const inside = y >= iy0 && y < iy1;
+    for (let x = 0; x < W; x++) {
+      if (inside && x >= ix0 && x < ix1) continue;
+      const p = (y * W + x) * 4;
+      d[p] = r;
+      d[p + 1] = g;
+      d[p + 2] = b;
+    }
+  }
+}
+
+/**
  * Build a function that fits a frame into W×H and applies the colour treatment.
  * Scratch canvases are shared between calls.
  * @param {number} W
@@ -38,7 +93,7 @@ export function createFrameProcessor(W, H, o) {
   return (src) => {
     tg.fillStyle = '#fff';
     tg.fillRect(0, 0, W, H);
-    drawContain(tg, src, W, H, o.figScale);
+    const rect = drawContain(tg, src, W, H, o.figScale);
     const img = tg.getImageData(0, 0, W, H);
     const d = img.data;
     for (let p = 0; p < d.length; p += 4) {
@@ -66,6 +121,7 @@ export function createFrameProcessor(W, H, o) {
         d[p + 2] = 255 - d[p + 2];
       }
     }
+    fillMargins(d, W, H, rect);
     if (!o.blur) return d;
     tg.putImageData(img, 0, 0);
     sg.filter = 'none';

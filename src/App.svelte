@@ -11,6 +11,7 @@
   import ColourPanel from './components/ColourPanel.svelte';
   import Preview from './components/Preview.svelte';
   import PrintSection from './components/PrintSection.svelte';
+  import Credits from './components/Credits.svelte';
 
   // re-render the animation shortly after anything it depends on changes (sliders settle first)
   $effect(() => {
@@ -31,6 +32,7 @@
   <header>
     <h1>Scanimation Studio</h1>
     <p>Drag the grid on the preview to move it by hand.</p>
+    <Credits />
   </header>
 
   <div class="editor">
