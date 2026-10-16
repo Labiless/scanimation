@@ -34,7 +34,7 @@
   }
 </script>
 
-<section class="panel" aria-labelledby="h-grid">
+<section class="panel" aria-labelledby="h-grid" data-tour="grid">
   <div class="row between">
     <h2 id="h-grid">Grid</h2>
     <button

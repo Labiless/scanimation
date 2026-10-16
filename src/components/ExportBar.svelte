@@ -42,7 +42,7 @@
   }
 </script>
 
-<div class="export-bar" aria-label="Export and save" role="group">
+<div class="export-bar" aria-label="Export and save" role="group" data-tour="export">
   <div class="row">
     <button id="saveGrid" type="button" class="primary" onclick={downloadGrid}
       >Download grid (transparent PNG)</button

@@ -143,7 +143,7 @@
 </script>
 
 <section class="panel stage-panel" aria-label="Preview">
-  <div class="stage {motionClass}" class:fit={ui.zoom === 'fit'} id="stage">
+  <div class="stage {motionClass}" data-tour="preview" class:fit={ui.zoom === 'fit'} id="stage">
     <canvas
       id="view"
       aria-label="Animation preview"

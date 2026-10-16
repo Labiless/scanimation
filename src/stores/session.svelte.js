@@ -6,7 +6,7 @@ import { settings, ui, media, motion } from './state.svelte.js';
 import { session as store } from '../lib/storage.js';
 import { canvasFromBlob, toPngBlob } from '../lib/canvas.js';
 import { decodeGif } from '../sources/gif.js';
-import { describeGif } from './sources.svelte.js';
+import { describeGif, loadExampleGif } from './sources.svelte.js';
 
 const SAVE_DELAY = 700;
 let ready = $state(false);
@@ -76,6 +76,8 @@ export async function restoreSession() {
       if (sheet) Object.assign(ui.sheet, sheet);
     }
     await loadState(stored?.settings, frames?.frames, frames?.gif);
+    // first visit (nothing saved yet): start from the example animation
+    if (!stored) await loadExampleGif();
   } catch {
     /* nothing stored, or storage unavailable */
   } finally {

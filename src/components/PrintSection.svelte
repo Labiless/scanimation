@@ -64,7 +64,7 @@
   };
 </script>
 
-<details class="panel print-box" id="printBox" bind:open={ui.printOpen}>
+<details class="panel print-box" id="printBox" bind:open={ui.printOpen} data-tour="print">
   <summary class="print-head">
     <h2 id="h-sheet">Print on A4</h2>
     <span class="note"

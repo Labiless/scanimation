@@ -34,7 +34,7 @@
   }
 </script>
 
-<section class="panel" aria-labelledby="h-frames">
+<section class="panel" aria-labelledby="h-frames" data-tour="sources">
   <h2 id="h-frames">Frames</h2>
   <div class="row between">
     <div class="seg" role="group" aria-label="Frame source">

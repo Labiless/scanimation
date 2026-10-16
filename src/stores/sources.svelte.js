@@ -5,6 +5,8 @@ import { settings, media, motion } from './state.svelte.js';
 import { readImageFiles } from '../sources/images.js';
 import { decodeGif, sampleGif, directGifUrl, fetchGifBytes } from '../sources/gif.js';
 import { renderTextFrames } from '../sources/text.js';
+// the example animation shown on the first visit, bundled so it works offline and inside the viewer
+import exampleGifUrl from '../assets/default.gif?url';
 
 export const gifStatus = $state({
   text: 'Direct links to .gif files or Giphy pages. If the site blocks the link, download the GIF and load it as a file.',
@@ -56,6 +58,18 @@ function useGif(gif) {
   settings.gifN = Math.min(6, gif.frames.length);
   describeGif();
   applyGifSample();
+}
+
+/** Load the bundled example GIF into the GIF tab (first visit). */
+export async function loadExampleGif() {
+  try {
+    const res = await fetch(exampleGifUrl);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    settings.source = 'gif';
+    useGif(decodeGif(bytes, 'example.gif'));
+  } catch {
+    /* no example: the app simply starts empty */
+  }
 }
 
 /** @param {File} file */

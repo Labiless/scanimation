@@ -12,6 +12,8 @@
   import Preview from './components/Preview.svelte';
   import PrintSection from './components/PrintSection.svelte';
   import Credits from './components/Credits.svelte';
+  import Tour from './components/Tour.svelte';
+  import { isFirstVisit, startTour } from './stores/tour.svelte.js';
 
   // re-render the animation shortly after anything it depends on changes (sliders settle first)
   $effect(() => {
@@ -25,6 +27,8 @@
   onMount(() => {
     restoreSession();
     loadLibrary();
+    // first visit: open the guide once the page has settled
+    if (isFirstVisit()) setTimeout(startTour, 500);
   });
 </script>
 
@@ -39,12 +43,14 @@
     <div class="controls-col">
       <SourcePanel />
       <GridPanel />
-      <div class="pair">
-        <FormatPanel />
-        <SizePanel />
-      </div>
-      <div class="pair">
-        <ColourPanel />
+      <div class="tour-group" data-tour="format">
+        <div class="pair">
+          <FormatPanel />
+          <SizePanel />
+        </div>
+        <div class="pair">
+          <ColourPanel />
+        </div>
       </div>
     </div>
     <Preview />
@@ -52,6 +58,8 @@
 
   <PrintSection />
 </div>
+
+<Tour />
 
 <style>
   .wrap {
@@ -86,6 +94,12 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     gap: 8px;
     align-items: start;
+  }
+
+  .tour-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .controls-col {
