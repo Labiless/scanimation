@@ -15,16 +15,19 @@
    * @property {string} [target] data-tour value of the area to highlight
    * @property {string} intro
    * @property {Array<[string, string]>} [points] term and explanation
-   * @property {boolean} [support] show the follow links
+   * @property {boolean} [support] show the author's links
+   * @property {string} [outro] text after the links
    */
 
   /** @type {Step[]} */
   const STEPS = [
     {
       title: 'Welcome to Scanimation Studio',
-      intro:
+      intro: `This tool was created by ${AUTHOR}. Follow along for new projects and updates:`,
+      support: true,
+      outro:
         'A scanimation is a printed image made of thin interleaved strips, plus a striped grid you slide over it: ' +
-        'moving the grid brings the picture to life. This short guide shows the main steps.',
+        'moving the grid brings the picture to life. Ready? Let’s start the step-by-step guide.',
     },
     {
       title: '1 · Choose a source',
@@ -82,11 +85,6 @@
       intro:
         'Saved animations are laid out automatically on two matching sets of A4 sheets: images and grids. ' +
         'Choose copies, margins and orientation, then download the two PDFs and print them at 100% ("Actual size").',
-    },
-    {
-      title: 'Enjoying it?',
-      intro: `Scanimation Studio is made by ${AUTHOR}. If you like it, support the project: follow on Instagram and star it on GitHub.`,
-      support: true,
     },
   ];
 
@@ -215,13 +213,16 @@
     {/if}
     {#if step.support}
       <div class="support">
-        {#each ['instagram', 'github'] as key (key)}
-          <a class="btn primary" href={LINKS[key].href} target="_blank" rel="noopener noreferrer">
-            <SocialIcon name={key} />
-            {key === 'instagram' ? `Follow ${LINKS[key].handle}` : `Star on GitHub`}
+        {#each Object.entries(LINKS) as [key, link] (key)}
+          <a class="btn" href={link.href} target="_blank" rel="noopener noreferrer" title={link.label}>
+            <SocialIcon name={key} size={16} />
+            {link.handle}
           </a>
         {/each}
       </div>
+    {/if}
+    {#if step.outro}
+      <p>{step.outro}</p>
     {/if}
     <div class="row between actions">
       <button type="button" class="skip" onclick={closeTour}>{last ? 'Close' : 'Skip guide'}</button>
@@ -230,7 +231,7 @@
           <button type="button" onclick={back}>Back</button>
         {/if}
         <button type="button" class="primary" bind:this={nextBtn} onclick={next}>
-          {last ? 'Start creating' : tour.step === 0 ? 'Show me' : 'Next'}
+          {last ? 'Start creating' : tour.step === 0 ? 'Start the guide' : 'Next'}
         </button>
       </div>
     </div>
@@ -301,8 +302,11 @@
     gap: 8px;
   }
 
+  /* the author's links: framed in yellow so they stand out on the first card */
   .support a {
     text-decoration: none;
+    font-weight: 700;
+    border: 2px solid var(--cta);
   }
 
   .actions {

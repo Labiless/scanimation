@@ -5,6 +5,7 @@ import { mount } from 'svelte';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
+import './styles/about.css';
 import App from './App.svelte';
 
 mount(App, { target: document.getElementById('app') });

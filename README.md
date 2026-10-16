@@ -83,6 +83,15 @@ The interface reads and writes `settings` directly (`bind:value`), and the app r
 depends on it. Image processing, GIF and text rendering, A4 layout and PDF generation are plain
 JavaScript modules that know nothing about Svelte.
 
+## Search engines and AI assistants
+
+- `index.html` carries the title, description, canonical URL, Open Graph/X cards and JSON-LD
+  (`WebApplication`, `Person`, `FAQPage`), plus an About/FAQ section in plain HTML that crawlers read
+  without running JavaScript. Keep the FAQ text and the JSON-LD in step.
+- `public/` holds `robots.txt` (all crawlers allowed, AI ones listed explicitly), `sitemap.xml`
+  (update `lastmod` when the content changes), `llms.txt` (summary for AI assistants, llmstxt.org),
+  `og-image.png`, icons and `site.webmanifest`.
+
 ## Printing
 
 Exported PNGs carry their resolution, and the PDFs place every piece in millimetres, so print at

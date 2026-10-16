@@ -3,12 +3,140 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Scanimation Studio</title>
+    <title>Scanimation Studio — Free Barrier-Grid Animation &amp; Kinegram Maker</title>
     <meta
       name="description"
-      content="Make scanimations (barrier-grid animations) from images, GIFs or text, and lay them out on A4 sheets at real size."
+      content="Free online scanimation maker: turn images, GIFs or text into barrier-grid animations (kinegrams). Export real-size PNGs and printable A4 PDFs with acetate grids."
     />
+    <meta name="author" content="Alessandro Miele (Labiles)" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://scanimation.alessandromiele.me/" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- sharing previews (Open Graph, X/Twitter) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Scanimation Studio" />
+    <meta property="og:url" content="https://scanimation.alessandromiele.me/" />
+    <meta property="og:title" content="Scanimation Studio — Free Barrier-Grid Animation Maker" />
+    <meta
+      property="og:description"
+      content="Turn images, GIFs or text into printable scanimations (barrier-grid animations, kinegrams). Free, in your browser."
+    />
+    <meta property="og:image" content="https://scanimation.alessandromiele.me/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Scanimation Studio: a striped barrier grid over an interlaced animation"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Scanimation Studio — Free Barrier-Grid Animation Maker" />
+    <meta
+      name="twitter:description"
+      content="Turn images, GIFs or text into printable scanimations (barrier-grid animations, kinegrams). Free, in your browser."
+    />
+    <meta name="twitter:image" content="https://scanimation.alessandromiele.me/og-image.png" />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!-- a plain-text summary of the site for AI assistants (llmstxt.org) -->
+    <link rel="alternate" type="text/markdown" href="/llms.txt" title="llms.txt" />
+
+    <!-- structured data: the app, its author and the FAQ shown at the bottom of the page -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "@id": "https://scanimation.alessandromiele.me/#app",
+            "name": "Scanimation Studio",
+            "alternateName": [
+              "Scanimation maker",
+              "Barrier-grid animation maker",
+              "Kinegram maker",
+              "Picket-fence animation generator"
+            ],
+            "url": "https://scanimation.alessandromiele.me/",
+            "description": "Free online tool to create scanimations (barrier-grid animations, also called kinegrams): turn images, an animated GIF or text into an interlaced image and a striped grid, then export them at real print size as PNGs or A4 PDFs.",
+            "applicationCategory": "DesignApplication",
+            "operatingSystem": "Any (runs in a web browser)",
+            "browserRequirements": "Requires JavaScript",
+            "inLanguage": "en",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "image": "https://scanimation.alessandromiele.me/og-image.png",
+            "screenshot": "https://scanimation.alessandromiele.me/og-image.png",
+            "featureList": [
+              "Frames from images, animated GIFs or animated text",
+              "Vertical, horizontal and circular (rotating) barrier grids",
+              "Adjustable strip width and slit aperture",
+              "Continuous or back-and-forth loops",
+              "Silhouette, posterize or original colours",
+              "Live preview with a draggable grid",
+              "PNG export at real size with embedded dpi",
+              "Automatic A4 layout of images and acetate grids as PDFs"
+            ],
+            "author": { "@id": "https://www.alessandromiele.me/#person" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://www.alessandromiele.me/#person",
+            "name": "Alessandro Miele",
+            "alternateName": "Labiles",
+            "url": "https://www.alessandromiele.me",
+            "sameAs": ["https://www.instagram.com/_labiles/", "https://github.com/Labiless"]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is a scanimation?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A scanimation, or barrier-grid animation, is a printed image made of the frames of an animation cut into thin strips and interleaved. A transparent sheet printed with black bars and thin slits is laid on top: as you slide it, the slits reveal one frame at a time and the picture appears to move."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is a kinegram the same as a scanimation?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Kinegram, scanimation, barrier-grid animation, picket-fence animation and ombro-cinéma all name the same optical effect. KINEGRAM is also a trademark of OVD Kinegram for diffractive security features on banknotes and passports, which are a different technology."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Scanimation Studio free?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. It is free, needs no account and runs entirely in your browser: your images are not uploaded anywhere."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How many frames should a barrier-grid animation have?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Four to six frames work best. Only one frame in N shows through the grid, so more frames make the image darker and harder to read, especially at small sizes."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I print a scanimation?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Print the interlaced image on paper and the grid on transparent acetate, both at 100% (actual size), never fit to page. Lay the acetate over the image and slide it, or pin it at the centre for a circular grid."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- UI typeface (Roboto) and the display faces offered for text animations -->
@@ -20,5 +148,94 @@
   </head>
   <body>
     <div id="app"></div>
+
+    <noscript>
+      <p class="noscript">
+        Scanimation Studio needs JavaScript to run. The guide below explains what it does.
+      </p>
+    </noscript>
+
+    <!--
+      About and FAQ: plain HTML, so search engines and AI crawlers that don't run JavaScript
+      still read what the tool is and does. Keep it in step with the FAQ in the structured data above.
+    -->
+    <article class="about" id="about" aria-labelledby="about-title">
+      <h2 id="about-title">What is a scanimation?</h2>
+      <p>
+        A <strong>scanimation</strong> — also called a <strong>barrier-grid animation</strong>,
+        <strong>kinegram</strong>, picket-fence animation, moiré animation or ombro-cinéma — is an optical
+        illusion you can print. The frames of a short animation are cut into thin strips and interleaved into
+        a single image. A transparent sheet printed with black bars and thin slits, the <em>barrier grid</em>,
+        goes on top: as you slide it, the slits reveal one frame at a time and the picture comes to life.
+      </p>
+      <p>
+        <strong>Scanimation Studio</strong> is a free online tool to make them: it builds the interlaced image
+        and the matching grid for you, shows a live preview and exports both at their real print size.
+      </p>
+
+      <h2>How to make a barrier-grid animation</h2>
+      <ol>
+        <li>
+          <strong>Choose a source:</strong> upload the frames as images, load an animated GIF, or type a word
+          and animate it (3D turn, spin, letters appearing). Four to six frames work best.
+        </li>
+        <li>
+          <strong>Tune the grid:</strong> vertical, horizontal or circular (rotating) lines, strip width, slit
+          aperture and a continuous or back-and-forth loop.
+        </li>
+        <li>
+          <strong>Set the size</strong> in millimetres and the print resolution, and pick a colour style.
+        </li>
+        <li><strong>Check the preview:</strong> the grid slides over the image just as it will on paper.</li>
+        <li>
+          <strong>Export:</strong> download the grid (a PNG with transparent slits, for acetate) and the base
+          image, or save the animation to lay several of them out on A4 sheets as two matching PDFs.
+        </li>
+      </ol>
+
+      <h2>Features</h2>
+      <ul>
+        <li>Frames from images, animated GIFs or animated text</li>
+        <li>Linear and circular barrier grids, adjustable strip width and slit aperture</li>
+        <li>Silhouette, posterize or original colours, fill colour and edge blur</li>
+        <li>Live preview with a draggable grid</li>
+        <li>PNG export with the print resolution embedded, so it prints at the exact size</li>
+        <li>Automatic A4 layout of images and acetate grids, as PDFs</li>
+        <li>Runs in your browser: nothing is uploaded, no account needed</li>
+      </ul>
+
+      <h2>Frequently asked questions</h2>
+      <h3>Is a kinegram the same as a scanimation?</h3>
+      <p>
+        Yes: kinegram, scanimation, barrier-grid animation, picket-fence animation and ombro-cinéma all name
+        the same effect. KINEGRAM is also a trademark of OVD Kinegram for diffractive security features on
+        banknotes and passports, which are a different technology.
+      </p>
+      <h3>Is Scanimation Studio free?</h3>
+      <p>
+        Yes. It is free, needs no account and runs entirely in your browser: your images are not uploaded.
+      </p>
+      <h3>How many frames should a barrier-grid animation have?</h3>
+      <p>
+        Four to six. Only one frame in N shows through the grid, so more frames make the image darker and
+        harder to read, especially at small sizes.
+      </p>
+      <h3>Which strip width and aperture should I use?</h3>
+      <p>
+        On a home printer, strips of about 0.3–0.4 mm and a slit aperture around 75% give a sharp, readable
+        result. Thinner strips need a more precise printer.
+      </p>
+      <h3>How do I print a scanimation?</h3>
+      <p>
+        Print the image on paper and the grid on transparent acetate, both at 100% ("actual size"), never "fit
+        to page". Lay the acetate over the image and slide it, or pin it at the centre for a circular grid.
+      </p>
+
+      <p class="about-credits">
+        Made by <a href="https://www.alessandromiele.me">Alessandro Miele (Labiles)</a> ·
+        <a href="https://www.instagram.com/_labiles/">Instagram</a> ·
+        <a href="https://github.com/Labiless">GitHub</a>
+      </p>
+    </article>
   </body>
 </html>

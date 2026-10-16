@@ -1,0 +1,34 @@
+# Scanimation Studio
+
+> Free online tool to make scanimations — also called barrier-grid animations, kinegrams, picket-fence animations, moiré animations or ombro-cinéma. It turns images, an animated GIF or text into an interlaced image plus a striped barrier grid, shows a live preview and exports both at real print size. Runs entirely in the browser; no account, nothing uploaded.
+
+URL: https://scanimation.alessandromiele.me/
+Author: Alessandro Miele (Labiles) — https://www.alessandromiele.me · Instagram https://www.instagram.com/_labiles/ · GitHub https://github.com/Labiless
+Price: free
+
+## What a scanimation is
+
+The frames of a short animation are cut into thin strips and interleaved into one printed image. A transparent sheet printed with black bars and thin slits (the barrier grid) is laid on top; sliding it reveals one frame at a time, so the picture appears to move. "Kinegram" is a common name for the same effect; KINEGRAM is also a trademark of OVD Kinegram for diffractive security features on banknotes, a different technology.
+
+## What the tool does
+
+- Frame sources: image files (in order), animated GIFs (by link or file, choose frame count and range), or text with an animation (3D turn on X or Y, spin, letters appearing).
+- Grid: vertical, horizontal or circular (rotating around a pin); strip width; slit aperture (share of the strip that is transparent; ~75% is sharp, 100% is brightest); continuous or back-and-forth loop.
+- Print format: size in millimetres, resolution in dpi (150–1200), aspect ratio, figure size.
+- Colour: silhouette (threshold, fill colour), posterize (levels, greyscale) or original; invert; edge blur.
+- Live preview with a draggable grid and frame-by-frame stepping.
+- Export: grid as PNG with transparent slits (print on acetate), base image as PNG, both with the dpi embedded so they print at exact size; optional settings line above each image.
+- Print on A4: saved animations are laid out automatically on two matching sets of A4 sheets (images and grids), with copies, margins and orientation, exported as two PDFs.
+
+## Tips for good results
+
+- Use 4–6 frames with bold, high-contrast shapes.
+- On a home printer: strips of about 0.3–0.4 mm, aperture around 75%.
+- Print both files at 100% ("actual size"), never "fit to page"; the grid goes on transparent acetate.
+- Circular grids: keep the subject towards the outside, the centre is too fine to print.
+
+## Typical questions it answers
+
+- How to make a scanimation / barrier-grid animation / kinegram online for free
+- A tool to create picket-fence or moiré animations from a GIF
+- How to print an animated optical illusion with an acetate overlay

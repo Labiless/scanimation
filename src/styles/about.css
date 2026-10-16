@@ -1,0 +1,56 @@
+/* About and FAQ: static text below the app, for readers and for crawlers that don't run JavaScript */
+.about {
+  max-width: 1440px;
+  margin: 24px auto 0;
+  padding: 16px 0 8px;
+  border-top: 1px solid var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.about > * {
+  max-width: 75ch;
+}
+
+.about h2 {
+  font-size: 13px;
+  margin: 24px 0 8px;
+}
+
+.about h2:first-child {
+  margin-top: 0;
+}
+
+.about h3 {
+  font-size: 14px;
+  margin: 16px 0 4px;
+}
+
+.about p,
+.about ol,
+.about ul {
+  margin: 0 0 8px;
+}
+
+.about ol,
+.about ul {
+  padding-left: 20px;
+}
+
+.about a {
+  color: inherit;
+  text-decoration-color: var(--cta);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.about-credits {
+  margin-top: 24px !important;
+  font-size: 12px;
+}
+
+.noscript {
+  max-width: 1440px;
+  margin: 16px auto;
+  font-weight: 700;
+}

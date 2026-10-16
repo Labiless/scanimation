@@ -35,7 +35,7 @@
 <div class="wrap">
   <header>
     <h1>Scanimation Studio</h1>
-    <p>Drag the grid on the preview to move it by hand.</p>
+    <p>Free online scanimation maker: barrier-grid animations, also known as kinegrams.</p>
     <Credits />
   </header>
 
