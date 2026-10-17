@@ -13,7 +13,7 @@ The frames of a short animation are cut into thin strips and interleaved into on
 ## What the tool does
 
 - Frame sources: image files (in order), animated GIFs (by link or file, choose frame count and range), or text with an animation (3D turn on X or Y, spin, letters appearing).
-- Grid: vertical, horizontal or circular (rotating around a pin); strip width; slit aperture (share of the strip that is transparent; ~75% is sharp, 100% is brightest); continuous or back-and-forth loop.
+- Grid: vertical, horizontal or circular (rotating around a pin); strip width; slit aperture (share of the strip that is transparent; below 100% is sharper, above is brighter; default 150%); continuous or back-and-forth loop.
 - Print format: size in millimetres, resolution in dpi (150–1200), aspect ratio, figure size.
 - Colour: silhouette (threshold, fill colour), posterize (levels, greyscale) or original; invert; edge blur.
 - Live preview with a draggable grid and frame-by-frame stepping.
@@ -23,7 +23,7 @@ The frames of a short animation are cut into thin strips and interleaved into on
 ## Tips for good results
 
 - Use 4–6 frames with bold, high-contrast shapes.
-- On a home printer: strips of about 0.3–0.4 mm, aperture around 75%.
+- Defaults: horizontal grid, 0.17 mm strips, 150% slit aperture (about 0.25 mm); with wider strips, 75–100% aperture keeps the image sharp.
 - Print both files at 100% ("actual size"), never "fit to page"; the grid goes on transparent acetate.
 - Circular grids: keep the subject towards the outside, the centre is too fine to print.
 

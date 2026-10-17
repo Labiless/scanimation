@@ -46,7 +46,10 @@
       points: [
         ['Motion', 'vertical or horizontal lines, or a circular grid that rotates around a pin.'],
         ['Strip width', 'thinner strips give smoother motion but need a precise printer.'],
-        ['Slit aperture', 'below 100% the image is sharper but darker; 75% is a good start.'],
+        [
+          'Slit aperture',
+          'below 100% the image is sharper but darker, above it brighter; 150% suits the default thin strips.',
+        ],
         ['Loop', 'continuous for cycles, back and forth for swings. The ↺ button restores the defaults.'],
       ],
     },

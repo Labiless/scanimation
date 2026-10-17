@@ -17,11 +17,11 @@ export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matc
 
 /** Grid settings restored by the reset button. */
 export const GRID_DEFAULTS = Object.freeze({
-  vertical: true,
+  vertical: false, // horizontal lines
   radial: false,
-  w: 2, // strip width in px
+  w: 2, // strip width in px: 0.17 mm at 300 dpi
   rays: 48,
-  aperture: 0.75, // slit width as a share of the strip
+  aperture: 1.5, // slit width as a share of the strip: 150% ≈ 0.25 mm
   loop: true,
 });
 
