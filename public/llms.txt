@@ -1,6 +1,6 @@
 # Scanimation Studio
 
-> Free online tool to make scanimations — also called barrier-grid animations, kinegrams, picket-fence animations, moiré animations or ombro-cinéma. It turns images, an animated GIF or text into an interlaced image plus a striped barrier grid, shows a live preview and exports both at real print size. Runs entirely in the browser; no account, nothing uploaded.
+> Free online tool to make scanimations — also called barrier-grid animations, kinegrams, picket-fence animations, moiré animations, slit animations or ombro-cinéma (sometimes searched as "scanigram"). Good for DIY projects: print the image on paper and the grid on acetate. It turns images, an animated GIF or text into an interlaced image plus a striped barrier grid, shows a live preview and exports both at real print size. Runs entirely in the browser; no account, nothing uploaded.
 
 URL: https://scanimation.alessandromiele.me/
 Author: Alessandro Miele (Labiles) — https://www.alessandromiele.me · Instagram https://www.instagram.com/_labiles/ · GitHub https://github.com/Labiless
@@ -32,3 +32,11 @@ The frames of a short animation are cut into thin strips and interleaved into on
 - How to make a scanimation / barrier-grid animation / kinegram online for free
 - A tool to create picket-fence or moiré animations from a GIF
 - How to print an animated optical illusion with an acetate overlay
+- How to make a DIY kinegram or DIY scanimation at home with paper and acetate
+- Free scanimation / kinegram generator online, scanigram tool
+
+## Pages
+
+- [Scanimation Studio — the tool](https://scanimation.alessandromiele.me/): make the animation and download image and grid
+- [How to make a scanimation: DIY kinegram guide](https://scanimation.alessandromiele.me/diy-scanimation-guide/): materials, steps, printing at real size, troubleshooting, project ideas
+- [What is a kinegram?](https://scanimation.alessandromiele.me/what-is-a-kinegram/): how barrier-grid animation works, its many names, kinegram vs. lenticular printing

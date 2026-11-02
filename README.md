@@ -34,7 +34,9 @@ wrapper, for publishing as a claude.ai artifact together with `dist/assets/`.
 ## Project structure
 
 ```
-index.html                 page shell: fonts, favicon, <div id="app">
+index.html                 the app page: meta tags, structured data, <div id="app">, About/FAQ
+diy-scanimation-guide/     static content page: DIY guide (built as /diy-scanimation-guide/)
+what-is-a-kinegram/        static content page: what a kinegram is (built as /what-is-a-kinegram/)
 src/
   main.js                  mounts the app and loads the global styles
   App.svelte               layout; re-renders the animation and keeps the session saved
@@ -88,6 +90,9 @@ JavaScript modules that know nothing about Svelte.
 - `index.html` carries the title, description, canonical URL, Open Graph/X cards and JSON-LD
   (`WebApplication`, `Person`, `FAQPage`), plus an About/FAQ section in plain HTML that crawlers read
   without running JavaScript. Keep the FAQ text and the JSON-LD in step.
+- The content pages (`diy-scanimation-guide/`, `what-is-a-kinegram/`) are plain HTML listed in
+  `vite.config.js` (`build.rollupOptions.input`); they share `src/pages/article.js` and
+  `src/styles/article.css`. Add new pages the same way, and to `public/sitemap.xml` and `public/llms.txt`.
 - `public/` holds `robots.txt` (all crawlers allowed, AI ones listed explicitly), `sitemap.xml`
   (update `lastmod` when the content changes), `llms.txt` (summary for AI assistants, llmstxt.org),
   `og-image.png`, icons and `site.webmanifest`.
